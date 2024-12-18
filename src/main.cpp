@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Filename: main.cpp : This file contains the 'main' function. 
-//                      Program execution begins and ends there.
+// Filename: main.cpp : Defines the entry point for the application.
 ////////////////////////////////////////////////////////////////////////////////
 #include "RasterTek.h"
+#include <windows.h>
 #include <iostream>
 using namespace std;
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
 {
 	std::cout << "Hello World!\n";
 }

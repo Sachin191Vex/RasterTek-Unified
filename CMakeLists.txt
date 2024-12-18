@@ -1,21 +1,46 @@
 # CMakeList.txt : CMake project for RasterTek, include source and define
 # project specific logic here.
-#
-cmake_minimum_required (VERSION 3.8)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
+# CMake minimum version requirement
+cmake_minimum_required(VERSION 3.15)
 
-project ("RasterTek")
+# Project name and version
+project(RasterTek VERSION 1.0)
 
-# Add source to this project's executable.
-add_executable (RasterTek "./src/main.cpp" "./src/RasterTek.h")
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET RasterTek PROPERTY CXX_STANDARD 20)
-endif()
+# Define the source files for the project
+set(SOURCES
+    src/main.cpp   # Add your main application file here
+    # src/other.cpp  # Add additional source files as needed
+)
 
-# TODO: Add tests and install targets if needed.
+# Define the executable target
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# Set the Windows subsystem (optional for GUI apps to suppress the console window)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    WIN32_EXECUTABLE TRUE
+)
+
+# Add include directories if needed
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/include  # Add your include directory here
+)
+
+# Add required libraries (if any)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    user32.lib       # Example: Linking Windows libraries
+    gdi32.lib        # Example: Linking GDI library
+    d3d11.lib        # Example: DirectX 11 library
+)
+
+# Install target (optional)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+# Generate Visual Studio solution
+if (MSVC)
+    set(CMAKE_GENERATOR_PLATFORM x64) # Set to x64 or x86 based on your platform
+endif ()
