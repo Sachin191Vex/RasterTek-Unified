@@ -1,8 +1,10 @@
 // RasterTek.h : Include file for standard system include files,
 // or project specific include files.
-
 #pragma once
 
 #include <iostream>
+#include <windows.h>
+#include <iostream>
 
-// TODO: Reference additional headers your program requires here.
+#define		RT_OK		1
+#define		RT_ERROR	0

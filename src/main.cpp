@@ -2,11 +2,20 @@
 // Filename: main.cpp : Defines the entry point for the application.
 ////////////////////////////////////////////////////////////////////////////////
 #include "RasterTek.h"
-#include <windows.h>
-#include <iostream>
-using namespace std;
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
+#include "systemclass.h"
+	
+// int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pScmdline, int iCmdshow)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	std::cout << "Hello World!\n";
+	SystemClass* system = nullptr;
+	int result;
+
+	system = new SystemClass;
+	result = system->Initialize();
+	while (result == RT_OK) {
+		system->Run();
+		system->Shutdown();
+	}
+	delete system;
+	system = nullptr;
 }
