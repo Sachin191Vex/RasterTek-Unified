@@ -13,8 +13,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Define the source files for the project
 set(SOURCES
-    src/main.cpp		 # Add your main application file here
-    inc/systemclass.h    # Add additional source files as needed
+    src/main.cpp         # Add your main application file here
+    inc/RasterTek.h      # Add additional source files as needed
+    inc/systemclass.h
     src/systemclass.cpp
     inc/inputclass.h
     src/inputclass.cpp
