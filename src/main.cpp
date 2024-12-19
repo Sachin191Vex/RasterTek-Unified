@@ -12,10 +12,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	system = new SystemClass;
 	result = system->Initialize();
-	while (result == RT_OK) {
+	if (result == RT_OK) {
 		system->Run();
-		system->Shutdown();
 	}
+
+	system->Shutdown();
 	delete system;
 	system = nullptr;
 }

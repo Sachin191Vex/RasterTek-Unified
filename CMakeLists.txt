@@ -13,8 +13,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Define the source files for the project
 set(SOURCES
-    src/main.cpp   # Add your main application file here
-    # src/other.cpp  # Add additional source files as needed
+    src/main.cpp		 # Add your main application file here
+    src/systemclass.cpp  # Add additional source files as needed
+    src/inputclass.cpp
+    src/applicationclass.cpp
 )
 
 # Define the executable target
