@@ -51,7 +51,7 @@ void SystemClass::Shutdown()
 		delete m_Input;
 		m_Input = nullptr;
 	}
-	
+
 	if (m_Application != nullptr) {
 		m_Application->Shutdown();
 		delete m_Application;
@@ -62,9 +62,9 @@ void SystemClass::Shutdown()
 }
 // --------------------------------------------------------------------------------------------------------------------
 
-// The Run function is where our application will loop and do all the application processing until we decide to quit. 
-// The application processing is done in the Frame function which is called each loop. This is an important concept to understand 
-// as now the rest of our application must be written with this in mind. 
+// The Run function is where our application will loop and do all the application processing until we decide to quit.
+// The application processing is done in the Frame function which is called each loop. This is an important concept to understand
+// as now the rest of our application must be written with this in mind.
 // The pseudo code looks like the following:
 //	while not done
 //		check for windows system messages
@@ -111,8 +111,8 @@ void SystemClass::Run()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-// The following Frame function is where all the processing for our application is done. 
-// We check the input object to see if the user has pressed escape and wants to quit. 
+// The following Frame function is where all the processing for our application is done.
+// We check the input object to see if the user has pressed escape and wants to quit.
 // If not, call the application class object to do its frame processing which will render the graphics for that frame.
 bool SystemClass::Frame()
 {
@@ -135,7 +135,7 @@ bool SystemClass::Frame()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-// Currently we will just read if a key is pressed or if a key is released and pass that information on to the input object. 
+// Currently we will just read if a key is pressed or if a key is released and pass that information on to the input object.
 // All other information we will pass back to the windows default message handler.
 LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 {
@@ -166,16 +166,16 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-// The InitializeWindows function returns screenWidth and screenHeight back to the calling function so we can make use of them throughout the application. 
-// We create the window using some default settings to initialize a plain black window with no borders. The function will make either a small 800x600 window or 
-// make a full screen window depending on a global variable called FULL_SCREEN. 
+// The InitializeWindows function returns screenWidth and screenHeight back to the calling function so we can make use of them throughout the application.
+// We create the window using some default settings to initialize a plain black window with no borders. The function will make either a small 800x600 window or
+// make a full screen window depending on a global variable called FULL_SCREEN.
 bool SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 {
 	WNDCLASSEX wc;
 	DEVMODE dmScreenSettings;
 	int posX, posY;
 
-	// Get an external pointer to this object.	
+	// Get an external pointer to this object.
 	ApplicationHandle = this;
 
 	// Get the instance of this application.
@@ -250,7 +250,7 @@ bool SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-// The WndProc function is where windows sends its messages to. 
+// The WndProc function is where windows sends its messages to.
 // We tell windows the name of it when we initialize the window class with wc.lpfnWndProc = WndProc in the InitializeWindows function above. 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam)
 {

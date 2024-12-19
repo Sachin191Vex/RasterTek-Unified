@@ -14,9 +14,9 @@ public:
 	SystemClass(const SystemClass&);
 	~SystemClass();
 
-	bool Initialize(); // Do all object initialization in this function 
+	bool Initialize(); // Do all object initialization in this function
 	void Run();
-	void Shutdown();   // Do all object cleanup in this function 
+	void Shutdown();   // Do all object cleanup in this function
 
 	LRESULT CALLBACK MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 
