@@ -14,8 +14,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Define the source files for the project
 set(SOURCES
     src/main.cpp		 # Add your main application file here
-    src/systemclass.cpp  # Add additional source files as needed
+    inc/systemclass.h    # Add additional source files as needed
+    src/systemclass.cpp
+    inc/inputclass.h
     src/inputclass.cpp
+    inc/applicationclass.h
     src/applicationclass.cpp
 )
 
@@ -29,7 +32,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Add include directories if needed
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/include  # Add your include directory here
+    ${CMAKE_SOURCE_DIR}/inc  # Add your include directory here
 )
 
 # Add required libraries (if any)
