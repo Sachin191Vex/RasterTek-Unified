@@ -9,4 +9,7 @@ public:
 
 	bool Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen, float screenDepth, float screenNear);
 	void Shutdown();
+
+	void BeginScene(float red, float green, float blue, float alpha);
+	void EndScene();
 };
