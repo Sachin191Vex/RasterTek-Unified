@@ -35,10 +35,7 @@ bool SystemClass::Initialize()
 	// Create and initialize the application class object.  This object will handle rendering all the graphics for this application.
 	m_Application = new ApplicationClass;
 	result = m_Application->Initialize(screenWidth, screenHeight, m_hwnd);
-	if (!result)
-	{
-		return false;
-	}
+	if (!result) { return false; }
 
 	return true;
 }
@@ -81,26 +78,22 @@ void SystemClass::Run()
 
 	// Loop until there is a quit message from the window or the user.
 	done = false;
-	while (!done)
-	{
+	while (!done) {
 		// Handle the windows messages.
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 
 		// If windows signals to end the application then exit out.
-		if (msg.message == WM_QUIT)
-		{
+		if (msg.message == WM_QUIT) {
 			done = true;
 		}
 		else
 		{
 			// Otherwise do the frame processing.
 			result = Frame();
-			if (!result)
-			{
+			if (!result) {
 				done = true;
 			}
 		}
@@ -119,17 +112,13 @@ bool SystemClass::Frame()
 	bool result;
 
 	// Check if the user pressed escape and wants to exit the application.
-	if (m_Input->IsKeyDown(VK_ESCAPE))
-	{
+	if (m_Input->IsKeyDown(VK_ESCAPE)) {
 		return false;
 	}
 
 	// Do the frame processing for the application class object.
 	result = m_Application->Frame();
-	if (!result)
-	{
-		return false;
-	}
+	if (!result) { return false; }
 
 	return true;
 }
@@ -206,8 +195,7 @@ bool SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	// Setup the screen settings depending on whether it is running in full screen or in windowed mode.
-	if (FULL_SCREEN)
-	{
+	if (FULL_SCREEN) {
 		// If full screen set the screen to maximum size of the users desktop and 32bit.
 		memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
@@ -221,9 +209,7 @@ bool SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 
 		// Set the position of the window to the top left corner.
 		posX = posY = 0;
-	}
-	else
-	{
+	} else {
 		// If windowed then set it to 800x600 resolution.
 		screenWidth = 800;
 		screenHeight = 600;
@@ -285,8 +271,7 @@ void SystemClass::ShutdownWindows()
 	ShowCursor(true);
 
 	// Fix the display settings if leaving full screen mode.
-	if (FULL_SCREEN)
-	{
+	if (FULL_SCREEN) {
 		ChangeDisplaySettings(NULL, 0);
 	}
 
