@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RasterTek.h"
+#include "d3dclass.h"
 
 // GLOBALS //
 const bool FULL_SCREEN = false;
@@ -22,4 +23,6 @@ public:
 
 private:
 	bool Render();
+
+	D3DClass* m_Direct3D;
 };

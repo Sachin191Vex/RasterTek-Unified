@@ -21,6 +21,8 @@ set(SOURCES
     src/inputclass.cpp
     inc/applicationclass.h
     src/applicationclass.cpp
+    inc/d3dclass.h
+    src/d3dclass.cpp
 )
 
 # Define the executable target

@@ -3,6 +3,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 ApplicationClass::ApplicationClass()
 {
+	m_Direct3D = nullptr;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass&)
@@ -16,11 +17,21 @@ ApplicationClass::~ApplicationClass()
 // --------------------------------------------------------------------------------------------------------------------
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+	bool result;
+	m_Direct3D = new D3DClass();
+	result = m_Direct3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
     return true;
 }
 
 void ApplicationClass::Shutdown()
 {
+	// Release the Direct3D object.
+	if (m_Direct3D)
+	{
+		m_Direct3D->Shutdown();
+		delete m_Direct3D;
+		m_Direct3D = nullptr;
+	}
 	return;
 }
 
