@@ -12,3 +12,15 @@
 
 #define		RT_OK		1
 #define		RT_ERROR	0
+
+// structure to specify how to run tests - parsed by command line arguments
+typedef enum { API_DX11 = 1, API_DX12 = 2, API_VK = 3, API_OGL = 3 } RTApi;
+typedef unsigned char uchar;
+
+struct RTUserArgs {
+	RTApi api = API_DX11;
+	uchar test = 5;
+	uchar end = 5;
+};
+
+extern RTUserArgs RTArgs;
