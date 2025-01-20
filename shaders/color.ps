@@ -1,0 +1,23 @@
+// Filename: color.ps
+// The pixel shader does the coloring of the polygons that we draw. They are run by the GPU for every visible pixel that will be drawn to the screen. 
+// Coloring, texturing, lighting, and most other effects you plan to do to your polygon faces are handled by the pixel shader program. 
+// Pixel shaders must be efficiently written due to the number of times they will be called by the GPU.
+
+// --------------------------------------------------------------------------------------------------------------------
+// TYPEDEFS - Defines input paramater to pixel shader received from vertex shader and outputs a color of type 'float4'
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
+
+// --------------------------------------------------------------------------------------------------------------------
+// Pixel Shader
+// The pixel shader draws each pixel on the polygons that will be rendered to the screen. 
+// In this pixel shader it uses PixelInputType as input and returns a float4 as output which represents the final pixel color.
+float4 ColorPixelShader(PixelInputType input) : SV_TARGET
+{
+    return input.color;
+}
+
+// --------------------------------------------------------------------------------------------------------------------

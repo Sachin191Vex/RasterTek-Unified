@@ -24,3 +24,12 @@ struct RTUserArgs {
 };
 
 extern RTUserArgs RTArgs;
+
+#define CHECK_RT_API(api) { (api == RTArgs.api)) ? true: false; }
+#define CHECK_RT_TEST_NUM(test) { ((test >= RTArgs.test) && (test <= RTArgs.test)) ? true: false; }
+
+#define WCHAR2CHAR(var_wchar_ptr, var_char_ptr) {\
+	int size = WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, NULL, 0, NULL, NULL);\
+	var_char_ptr = new char[size];\
+	WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, var_char_ptr, size, NULL, NULL);\
+}

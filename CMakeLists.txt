@@ -23,6 +23,14 @@ set(SOURCES
     src/applicationclass.cpp
     inc/d3dclass.h
     src/d3dclass.cpp
+    inc/shaderclass.h
+    src/shaderclass.cpp
+    inc/modelclass.h
+    src/modelclass.cpp
+    inc/cameraclass.h
+    src/cameraclass.cpp
+    shaders/color.vs     # Vertex shader
+    shaders/color.ps     # Pixel shader
 )
 
 # Define the executable target
