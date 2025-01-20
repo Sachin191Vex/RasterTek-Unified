@@ -7,10 +7,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 ShaderClass::ShaderClass()
 {
-    m_vertexShader = 0;
-    m_pixelShader = 0;
-    m_layout = 0;
-    m_matrixBuffer = 0;
+    m_vertexShader = nullptr;
+    m_pixelShader = nullptr;
+    m_layout = nullptr;
+    m_matrixBuffer = nullptr;
 }
 
 ShaderClass::ShaderClass(const ShaderClass& other)
@@ -87,27 +87,25 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
-    ID3D10Blob* vertexShaderBuffer;
-    ID3D10Blob* pixelShaderBuffer;
-    D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
     unsigned int numElements;
-    D3D11_BUFFER_DESC matrixBufferDesc;
 
     // Initialize the pointers this function will use to null.
-    errorMessage = 0;
-    vertexShaderBuffer = 0;
-    pixelShaderBuffer = 0;
+    errorMessage = nullptr;
 
+    // Step 1: Compile shaders -------------------------------------------------------------------------------------------
     // Compile the vertex shader code.
+    ID3D10Blob* vertexShaderBuffer = nullptr;
     result = D3DCompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
                                 &vertexShaderBuffer, &errorMessage);
     CHECK_AND_RETURN_COMPILE_RESULT(result, vsFilename);
 
     // Compile the pixel shader code.
+    ID3D10Blob* pixelShaderBuffer = nullptr;
     result = D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
                                 &pixelShaderBuffer, &errorMessage);
     CHECK_AND_RETURN_COMPILE_RESULT(result, psFilename);
 
+    // Step 2: Create shader objects/sblobs ------------------------------------------------------------------------------
     // Create the vertex shader from the buffer.
     result = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_vertexShader);
     if (FAILED(result)) { return false; }
@@ -116,8 +114,10 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     result = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_pixelShader);
     if (FAILED(result)) { return false; }
 
+    // Step 3: Define inputs to vertex shader ----------------------------------------------------------------------------
     // Create the vertex input layout description.
     // This setup needs to match the VertexType stucture in the ModelClass and in the shader.
+    D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
     polygonLayout[0].SemanticName = "POSITION";
     polygonLayout[0].SemanticIndex = 0;
     polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -149,7 +149,12 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     pixelShaderBuffer->Release();
     pixelShaderBuffer = 0;
 
+    // Step 4: Define buffer to pass constats to the shader --------------------------------------------------------------
     // Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
+    // The buffer usage needs to be set to dynamic since we will be updating it each frame.
+    // The bind flags indicate that this buffer will be a constant buffer.
+    // The CPU access flags need to match up with the usage so it is set to D3D11_CPU_ACCESS_WRITE.
+    D3D11_BUFFER_DESC matrixBufferDesc;
     matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
     matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
     matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -169,25 +174,25 @@ void ShaderClass::ShutdownShader()
     // Release the matrix constant buffer.
     if(m_matrixBuffer) {
         m_matrixBuffer->Release();
-        m_matrixBuffer = 0;
+        m_matrixBuffer = nullptr;
     }
 
     // Release the layout.
     if(m_layout) {
         m_layout->Release();
-        m_layout = 0;
+        m_layout = nullptr;
     }
 
     // Release the pixel shader.
     if(m_pixelShader) {
         m_pixelShader->Release();
-        m_pixelShader = 0;
+        m_pixelShader = nullptr;
     }
 
     // Release the vertex shader.
     if(m_vertexShader) {
         m_vertexShader->Release();
-        m_vertexShader = 0;
+        m_vertexShader = nullptr;
     }
 
     return;
@@ -228,24 +233,27 @@ void ShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, 
     return;
 }
 
+// The SetShaderVariables function exists to make setting the global variables in the shader easier.
+// The matrices used in this function are created inside the ApplicationClass, after which this function is called
+// to send them from there into the vertex shader during the Render function call.
 bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                                            XMMATRIX projectionMatrix)
 {
     HRESULT result;
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    MatrixBufferType* dataPtr;
     unsigned int bufferNumber;
 
-    // Transpose the matrices to prepare them for the shader.
+    // Transpose matrices before sending them into the shader, this is a requirement for DirectX 11.
     worldMatrix = XMMatrixTranspose(worldMatrix);
     viewMatrix = XMMatrixTranspose(viewMatrix);
     projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
     // Lock the constant buffer so it can be written to.
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
     result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
     if (FAILED(result)) { return false; }
 
     // Get a pointer to the data in the constant buffer.
+    MatrixBufferType* dataPtr;
     dataPtr = (MatrixBufferType*)mappedResource.pData;
 
     // Copy the matrices into the constant buffer.
@@ -265,17 +273,21 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     return true;
 }
 
-
+// The render function sets the shader parameters and then draws the prepared model vertices using the shader.
+// The first step in this function is to set our input layout to active in the input assembler. This lets the GPU
+// know the format of the data in the vertex buffer.
+// The second step is to set the vertex shader and pixel shader we will be using to render this vertex buffer.
+// The third step is to issue a draw call
 void ShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
-    // Set the vertex input layout.
+    // Step 1: Set the vertex input layout.
     deviceContext->IASetInputLayout(m_layout);
 
-    // Set the vertex and pixel shaders that will be used to render this triangle.
+    // Step 2: Set the vertex and pixel shaders that will be used to render this triangle.
     deviceContext->VSSetShader(m_vertexShader, NULL, 0);
     deviceContext->PSSetShader(m_pixelShader, NULL, 0);
 
-    // Render the triangle.
+    // Step 3: Render the triangle.
     deviceContext->DrawIndexed(indexCount, 0, 0);
 
     return;

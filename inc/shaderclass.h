@@ -14,6 +14,8 @@ using namespace std;
 class ShaderClass
 {
 private:
+	// Here is the definition of the cBuffer type that will be used with the vertex shader. This typedef must be exactly
+	// the same as the one in the vertex shader as the model data needs to match the typedefs in the shader for proper rendering.
 	struct MatrixBufferType
 	{
 		XMMATRIX world;

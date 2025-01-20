@@ -9,6 +9,9 @@
 using namespace DirectX;
 
 // Class name: CameraClass
+// Camera class to let DirectX 11 know from where and also how we are viewing the scene. The camera class will keep
+// track of where the camera is and its current rotation. It will use the position and rotation information
+// to generate a view matrix which will be passed into the HLSL shader for rendering.
 class CameraClass
 {
 public:

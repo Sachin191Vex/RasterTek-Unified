@@ -50,6 +50,12 @@ XMFLOAT3 CameraClass::GetRotation()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+// The Render function uses the position and rotation of the camera to build and update the view matrix.
+// step 1: We first setup our variables for up, position, rotation, and so forth.
+// step 2: Then at the origin of the scene we first rotate the camera based on the x, y, and z rotation of the camera.
+// step 3: Once it is properly rotated when then translate the camera to the position in 3D space.
+// step 4: With the correct values in the position, lookAt, and up we can then use the XMMatrixLookAtLH function
+//         to create the view matrix to represent the current camera rotation and translation
 void CameraClass::Render()
 {
     XMFLOAT3 up, position, lookAt;

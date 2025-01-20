@@ -4,8 +4,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 ModelClass::ModelClass()
 {
-    m_vertexBuffer = 0;
-    m_indexBuffer = 0;
+    m_vertexBuffer = nullptr;
+    m_indexBuffer = nullptr;
 }
 
 ModelClass::ModelClass(const ModelClass& other)
@@ -36,6 +36,7 @@ void ModelClass::Shutdown()
     return;
 }
 
+// This function to put the vertex and index buffers on the graphics pipeline so the color shader will be able to render them.
 void ModelClass::Render(ID3D11DeviceContext* deviceContext)
 {
     // Put the vertex and index buffers on the graphics pipeline to prepare them for drawing.
@@ -55,8 +56,6 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 {
     VertexType* vertices;
     unsigned long* indices;
-    D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
-    D3D11_SUBRESOURCE_DATA vertexData, indexData;
     HRESULT result;
 
     // Set the number of vertices in the vertex array.
@@ -73,6 +72,11 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     indices = new unsigned long[m_indexCount];
     if (!indices) { return false; }
 
+    // Step 1: Fill both the vertex and index array -------------------------------------------------------------------
+    // The points are created in the clockwise order of drawing them. If you do this counter clockwise it will think the triangle is facing
+    // the opposite direction and not draw it due to back face culling.
+    // Always remember that the order in which you send your vertices to the GPU is very important.
+    // The color is set here as well since it is part of the vertex description.
     // Load the vertex array with data.
     vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
     vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -88,7 +92,13 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     indices[1] = 1;  // Top middle.
     indices[2] = 2;  // Bottom right.
 
+    // Step 2: Create the vertex buffer and index buffer. ----------------------------------------------------------------
+    // First fill out a description of the buffer. In the description the ByteWidth (size of the buffer) and the BindFlags (type of buffer) 
+    // are what you need to ensure are filled out correctly.
+    // Second, fill out a subresource pointer which will point to either your vertex or index array you previously created.
+    // With the description and subresource pointer you can call CreateBuffer using the D3D device and it will return a pointer to your new buffer.
     // Set up the description of the static vertex buffer.
+    D3D11_BUFFER_DESC vertexBufferDesc;
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -97,6 +107,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     vertexBufferDesc.StructureByteStride = 0;
 
     // Give the subresource structure a pointer to the vertex data.
+    D3D11_SUBRESOURCE_DATA vertexData;
     vertexData.pSysMem = vertices;
     vertexData.SysMemPitch = 0;
     vertexData.SysMemSlicePitch = 0;
@@ -106,6 +117,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     if (FAILED(result)) { return false; }
 
     // Set up the description of the static index buffer.
+    D3D11_BUFFER_DESC indexBufferDesc;
     indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     indexBufferDesc.ByteWidth = sizeof(unsigned long) * m_indexCount;
     indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -114,6 +126,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     indexBufferDesc.StructureByteStride = 0;
 
     // Give the subresource structure a pointer to the index data.
+    D3D11_SUBRESOURCE_DATA indexData;
     indexData.pSysMem = indices;
     indexData.SysMemPitch = 0;
     indexData.SysMemSlicePitch = 0;
@@ -137,19 +150,22 @@ void ModelClass::ShutdownBuffers()
     // Release the index buffer.
     if(m_indexBuffer) {
         m_indexBuffer->Release();
-        m_indexBuffer = 0;
+        m_indexBuffer = nullptr;
     }
 
     // Release the vertex buffer.
     if(m_vertexBuffer) {
         m_vertexBuffer->Release();
-        m_vertexBuffer = 0;
+        m_vertexBuffer = nullptr;
     }
 
     return;
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+// THe purpose of this function is to set the vertex buffer and index buffer as active on the input assembler in the GPU.
+// Once the GPU has an active vertex buffer it can then use the shader to render that buffer.
+// This function also defines how those buffers should be drawn such as triangles, lines, fans, and so forth.
 void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 {
     unsigned int stride;
