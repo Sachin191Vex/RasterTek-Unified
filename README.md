@@ -14,11 +14,11 @@ Follow these steps to build and execute the program:
    ```bash
    cmake . -B build
 3. Open Visual Studio 2022 and load the generated project.
-4. Set the active project to RasterTek, then build and run the program from base directrory.
+4. Set the active project to RasterTek, then build and run the program from build directrory.
 Note: Solution files will be generated in the build directory.
    ```bash
-   ..\build\Debug\RasterTek.exe --test 4
-   ..\build\Reelase\RasterTek.exe --test 5
+   .\Debug\RasterTek.exe --test 4
+   .\Reelase\RasterTek.exe --test 5
 
 ---
 ## Learnings / Best Known Methods (BKMs)

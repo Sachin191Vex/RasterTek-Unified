@@ -30,11 +30,11 @@ bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
     int error;
 
     // Set the filename of the vertex shader.
-    error = wcscpy_s(vsFilename, 128, L"./shaders/color.vs");
+    error = wcscpy_s(vsFilename, 128, L"../shaders/color.vs");
     if(error != 0) { return false; }
 
     // Set the filename of the pixel shader.
-    error = wcscpy_s(psFilename, 128, L"./shaders/color.ps");
+    error = wcscpy_s(psFilename, 128, L"../shaders/color.ps");
     if (error != 0) { return false; }
 
     // Initialize the vertex and pixel shaders.
