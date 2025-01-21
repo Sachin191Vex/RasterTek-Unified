@@ -31,6 +31,7 @@ set(SOURCES
     src/cameraclass.cpp
     shaders/color.vs     # Vertex shader
     shaders/color.ps     # Pixel shader
+	README.md            # README file
 )
 
 # Define the executable target

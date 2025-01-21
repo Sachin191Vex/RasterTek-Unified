@@ -8,16 +8,17 @@ These tutorials are built upon the original [**RasterTek DX11 Tutorials**](https
 ---
 
 ## How to Build and Run
-
 Follow these steps to build and execute the program:
-
 1. Open the **Visual Studio Developer Command Prompt** to set all Visual Studio paths correctly.  
 2. Run the following command to configure the project:  
    ```bash
    cmake . -B build
 3. Open Visual Studio 2022 and load the generated project.
-4. Set the active project to RasterTek, then build and run the program.
+4. Set the active project to RasterTek, then build and run the program from base directrory.
 Note: Solution files will be generated in the build directory.
+   ```bash
+   ..\build\Debug\RasterTek.exe --test 4
+   ..\build\Reelase\RasterTek.exe --test 5
 
 ---
 ## Learnings / Best Known Methods (BKMs)
