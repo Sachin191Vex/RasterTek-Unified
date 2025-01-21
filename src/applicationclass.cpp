@@ -25,13 +25,14 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+	char textureFilename[128];
 	bool result;
 
 	// Step 1: Create the direct3d object. -------------------------------------------------------------------------------
 	m_Direct3D = new D3DClass();
 	result = m_Direct3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
 	if (!result) { SHOW_MSG_AND_REURN("Could not initialize Direct3D", "Error");}
-	if (CHECK_RT_TEST_NUM(3) == true) { return true; }
+	if (CHECK_RT_TEST_NUM(3)) { return true; }
 
 	// Step 2: Create the camera object. ---------------------------------------------------------------------------------
 	m_Camera = new CameraClass;
@@ -42,7 +43,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Step 3: Create and initialize the model object. -------------------------------------------------------------------
 	m_Model = new ModelClass;
 
-	result = m_Model->Initialize(m_Direct3D->GetDevice());
+	// Set the name of the texture file that we will be loading.
+	strcpy_s(textureFilename, "../data/textures/stone01.tga");
+
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
 	if (!result) { SHOW_MSG_AND_REURN("Could not initialize the model object.", "Error"); }
 
 	// Create and initialize the color shader object.
@@ -133,7 +137,8 @@ bool ApplicationClass::Render()
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	// 2-d: Render the model using the color shader.
-	result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	if (CHECK_RT_TEST_NUM(4)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, nullptr); }
+	if (CHECK_RT_TEST_NUM(5)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture()); }
 	if (!result) { return false; }
 
 	// Step 3: Present the rendered scene to the screen. -----------------------------------------------------------------

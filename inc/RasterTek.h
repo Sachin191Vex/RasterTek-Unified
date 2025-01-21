@@ -26,9 +26,9 @@ struct RTUserArgs {
 
 extern RTUserArgs RTArgs;
 
-#define CHECK_RT_API(test_api) ( (test_api == RTArgs.api) ? true: false )
 #define CHECK_RT_TEST_NUM(test_num) ( (test_num == RTArgs.test) ? true: false )
 #define CHECK_RT_TEST_IN_RANGE(test_num) ( ((test_num >= RTArgs.test) && (test_num <= RTArgs.end)) ? true: false )
+#define CHECK_RT_API(test_api) ( (test_api == RTArgs.api) ? true: false )
 
 #define WCHAR2CHAR(var_wchar_ptr, var_char_ptr) {\
 	int size = WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, NULL, 0, NULL, NULL);\

@@ -31,7 +31,7 @@ bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 
     vsFilename = L"../shaders/color.vs";
     psFilename = L"../shaders/color.ps";
-    if (CHECK_RT_API(5)) {
+    if (CHECK_RT_TEST_NUM(5)) {
         vsFilename = L"../shaders/texture.vs";
         psFilename = L"../shaders/texture.ps";
     }
@@ -53,12 +53,12 @@ void ShaderClass::Shutdown()
 
 // --------------------------------------------------------------------------------------------------------------------
 bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-                              XMMATRIX projectionMatrix)
+                              XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
 {
     bool result;
 
     // Set the shader parameters that it will use for rendering.
-    result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, nullptr);
+    result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture);
     if (!result) { return false; }
 
     // Now render the prepared buffers with the shader.
@@ -95,7 +95,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // Step 1: Compile shaders -------------------------------------------------------------------------------------------
     vsShaderName = "ColorVertexShader";
     psShaderName = "ColorPixelShader";
-    if (CHECK_RT_API(5)) {
+    if (CHECK_RT_TEST_NUM(5)) {
         vsShaderName = "TextureVertexShader";
         psShaderName = "TexturePixelShader";
     }
@@ -134,10 +134,10 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     polygonLayout[0].InstanceDataStepRate = 0;
 
     polygonLayout[1].SemanticName = "COLOR";
-    if (CHECK_RT_API(5)) { polygonLayout[1].SemanticName = "TEXCOORD"; }
+    if (CHECK_RT_TEST_NUM(5)) { polygonLayout[1].SemanticName = "TEXCOORD"; }
     polygonLayout[1].SemanticIndex = 0;
     polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    if (CHECK_RT_API(5)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
+    if (CHECK_RT_TEST_NUM(5)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
     polygonLayout[1].InputSlot = 0;
     polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
     polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -181,7 +181,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // AddressU and AddressV are set to Wrap which ensures that the coordinates stay between 0.0f and 1.0f.
     // Anything outside of that wraps around and is placed between 0.0f and 1.0f.
     // All other settings for the sampler state description are defaults.
-    if (CHECK_RT_API(5)) {
+    if (CHECK_RT_TEST_NUM(5)) {
         // Create a texture sampler state description.
         D3D11_SAMPLER_DESC samplerDesc;
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
