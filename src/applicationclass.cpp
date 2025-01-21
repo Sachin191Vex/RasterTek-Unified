@@ -121,6 +121,7 @@ bool ApplicationClass::Render()
 
 	// Step 2: Peset the render frame ------------------------------------------------------------------------------------
 	// 2-a: Generate the view matrix based on the camera's position.
+	// m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
 	m_Camera->Render();
 
 	// 2-b: Get the world, view, and projection matrices from the camera and d3d objects.

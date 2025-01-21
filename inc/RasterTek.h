@@ -21,6 +21,7 @@ struct RTUserArgs {
 	RTApi api = API_DX11;
 	uchar test = 5;
 	uchar end = 5;
+	uchar mod = 1;
 };
 
 extern RTUserArgs RTArgs;

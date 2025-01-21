@@ -29,8 +29,12 @@ set(SOURCES
     src/modelclass.cpp
     inc/cameraclass.h
     src/cameraclass.cpp
-    shaders/color.vs     # Vertex shader
-    shaders/color.ps     # Pixel shader
+    inc/textureclass.h
+    src/textureclass.cpp
+    shaders/color.vs     # Vertex shader (Rendering Color)
+    shaders/color.ps     # Pixel shader (RRendering Color)
+    shaders/texture.vs   # Vertex shader (Rendering Texture)
+    shaders/texture.ps   # Pixel shader (Rendering Texture)
 	README.md            # README file
 )
 

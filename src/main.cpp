@@ -93,7 +93,7 @@ int parseArguments(LPWSTR lpCmdLine) {
 	}
 
 	// Check for other parameters
-	CHECK_AND_ASSIGN("--api", RTApi, RTArgs.api);
+ 	CHECK_AND_ASSIGN("--api", RTApi, RTArgs.api);
 	CHECK_AND_ASSIGN("--test", uchar, RTArgs.test);
 	CHECK_AND_ASSIGN("--end", uchar, RTArgs.end);
 

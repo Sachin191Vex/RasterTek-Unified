@@ -1,0 +1,28 @@
+// Filename: texture.ps
+
+// GLOBALS
+// The texture pixel shader has two global variables.
+// The first is Texture2D shaderTexture which is the texture resource.
+// The second new variable is the SamplerState SampleType.
+Texture2D shaderTexture : register(t0);
+SamplerState SampleType : register(s0);
+
+// TYPEDEFS
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+// Pixel Shader
+// The sample function uses the sampler state we defined above and the texture coordinates for this pixel.
+// It uses these two variables to determine and return the pixel value for this UV location on the polygon face.
+float4 TexturePixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+
+    // Sample the pixel color from the texture using the sampler at this texture coordinate location.
+    textureColor = shaderTexture.Sample(SampleType, input.tex);
+
+    return textureColor;
+}

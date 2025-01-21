@@ -125,7 +125,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     indexBufferDesc.MiscFlags = 0;
     indexBufferDesc.StructureByteStride = 0;
 
-    // Give the subresource structure a pointer to the index data.
+    // Give the subresource structure a  pointer to the index data.
     D3D11_SUBRESOURCE_DATA indexData;
     indexData.pSysMem = indices;
     indexData.SysMemPitch = 0;
