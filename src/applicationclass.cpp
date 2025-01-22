@@ -43,22 +43,26 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
     // Set the initial position of the camera.
     m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
+    if (CHECK_RT_TEST_NUM(8)) {
+        // Move the camera back another 5 units so that we can see both cubes easily.
+        m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+    }
 
     // Step 3: Create and initialize the model object. -------------------------------------------------------------------
     // Set the file name of the model.
     m_Model = new ModelClass;
 
     // Set the name of the model and texture file that we will be loading.
-    if (CHECK_RT_TEST_NUM(7)) {
+    if (CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) {
         modelFilename = new char[128];
         strcpy(modelFilename, "../data/models/cube.txt");
     }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) {
         textureFilename = new char[128];
         strcpy(textureFilename, "../data/textures/stone01.tga");
         useTexture = true;
     }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { useNormal = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) { useNormal = true; }
 
     result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useNormal);
     if (modelFilename != nullptr) { delete[] modelFilename; }
@@ -144,10 +148,28 @@ bool ApplicationClass::Frame()
 // ith the vertices now prepared we call the color shader to draw the vertices using the model information and the three
 // matrices for positioning each vertex. The green triangle is now drawn to the back buffer. With that the scene is
 // complete and we call EndScene to display it to the screen.
+
+// Tutorisal 8 notes: In this tutorial we will do two transformation examples with the 3D model from the last tutorial.
+// The first transformation will be a rotation and a translation.
+// The second transformation will be a scale, rotation, and a translation.
+//
+// We you don't need to send them all into the shader. Instead, you can just multiply all the different
+// transform matrices together and it will create a single matrix which will do all of the combined transformations!
+//
+// Key point: However, note that the order of multiplying matrices together is crucial; if you do it in the wrong order, you will place
+// the model somewhere you probably weren't expecting it to be. The correction order of multiplying matrices for the three
+// main types of transformation we are performing in this tutorial is: 1 - Scale, 2 - Rotation, 3 - Translation, or SRT for a shorter abbreviation.
+//
+// To help remember this order it is easiest by just thinking about the model in the 3D world.
+// It first starts by being located at the origin of our 3D scene at 0, 0, 0. Now before moving it anywhere we first scale it
+// and make it the overall size we wish it to be.
+// Once it is scaled, we then rotate it so that it will be oriented in the direction we want it to face.
+// Now that it is both scaled and rotated, we can move it to the final location in the 3D world by using translation.
+
 bool ApplicationClass::Render(float rotation)
 {
-    XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
     bool result;
+    XMMATRIX worldMatrix, viewMatrix, projectionMatrix, rotateMatrix, translateMatrix, scaleMatrix, srMatrix;
 
     if (CHECK_RT_TEST_NUM(3) == true) {
         // Clear the buffers to begin the scene - gray
@@ -163,11 +185,13 @@ bool ApplicationClass::Render(float rotation)
     // Clear the buffers to begin the scene - black
     m_Direct3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-    // Step 2: Peset the render frame ------------------------------------------------------------------------------------
-    // 2-a: Generate the view matrix based on the camera's position.
-    // m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
-    m_Camera->Render();
+    // Step 2: Reset the render frame ---------------------------------------------------------------------------------
 
+    // 2-a: Generate the view matrix based on the camera's position.
+    m_Camera->Render();
+    // m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
+
+    // Object #1 base object ==========================================================================================
     // 2-b: Get the world, view, and projection matrices from the camera and d3d objects.
     m_Direct3D->GetWorldMatrix(worldMatrix);
     m_Camera->GetViewMatrix(viewMatrix);
@@ -178,7 +202,14 @@ bool ApplicationClass::Render(float rotation)
         // Rotate the world matrix by the rotation value so that the triangle will spin.
         worldMatrix = XMMatrixRotationY(rotation);
     }
+    if (CHECK_RT_TEST_NUM(8)) {
+        // Key ont: Multiplu in SRT porder as decribed above
+        rotateMatrix = XMMatrixRotationY(rotation);  // Build the rotation matrix.
+        translateMatrix = XMMatrixTranslation(-2.0f, 0.0f, 0.0f);  // Build the translation matrix.
 
+        // Multiply them together to create the final world transformation matrix.
+        worldMatrix = XMMatrixMultiply(rotateMatrix, translateMatrix);
+    }
     // 2-c: Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
     m_Model->Render(m_Direct3D->GetDeviceContext());
 
@@ -186,6 +217,24 @@ bool ApplicationClass::Render(float rotation)
     ID3D11ShaderResourceView* texture = m_Model->GetTexture();
     result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture, m_Light->GetDirection(), m_Light->GetDiffuseColor());
     if (!result) { return false; }
+
+    if (CHECK_RT_TEST_NUM(8)) {
+        // Object #2 Additonal object ========================================================================================
+        scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);          // Build the scaling matrix.
+        rotateMatrix = XMMatrixRotationY(rotation);               // Build the rotation matrix.
+        translateMatrix = XMMatrixTranslation(2.0f, 0.0f, 0.0f);  // Build the translation matrix.
+
+        // Multiply the scale, rotation, and translation matrices together to create the final world transformation matrix.
+        srMatrix = XMMatrixMultiply(scaleMatrix, rotateMatrix);
+        worldMatrix = XMMatrixMultiply(srMatrix, translateMatrix);
+
+        // Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
+        m_Model->Render(m_Direct3D->GetDeviceContext());
+
+        // Render the model using the light shader.
+        result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+        if (!result) { return false; }
+    }
 
     // Step 3: Present the rendered scene to the screen. -----------------------------------------------------------------
     m_Direct3D->EndScene();
