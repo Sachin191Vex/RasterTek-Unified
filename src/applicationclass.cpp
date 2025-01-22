@@ -19,7 +19,7 @@ ApplicationClass::~ApplicationClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-#define SHOW_MSG_AND_REURN(msg, title) {\
+#define SHOW_MSG_AND_RETURN(msg, title) {\
     MessageBox(hwnd, msg, title, MB_OK);\
     return false;\
 }
@@ -33,7 +33,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
     m_Direct3D = new D3DClass();
     result = m_Direct3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
-    if (!result) { SHOW_MSG_AND_REURN("Could not initialize Direct3D", "Error");}
+    if (!result) { SHOW_MSG_AND_RETURN("Could not initialize Direct3D", "Error");}
     if (CHECK_RT_TEST_NUM(3)) { return true; }
 
     // Step 2: Create the camera object. ---------------------------------------------------------------------------------
@@ -58,13 +58,13 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename);
     if (modelFilename != nullptr) { delete[] modelFilename; }
     if (textureFilename != nullptr) { delete[] textureFilename; }
-    if (!result) { SHOW_MSG_AND_REURN("Could not initialize the model object.", "Error"); }
+    if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the model object.", "Error"); }
 
     // Create and initialize the shader object.
     m_Shader = new ShaderClass;
 
     result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd);
-    if (!result) { SHOW_MSG_AND_REURN("Could not initialize the shader object.", "Error"); }
+    if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the shader object.", "Error"); }
 
     // Create and initialize the light object.
     // The color of the light is set to white and the light direction is set to point down the positive Z axis.
