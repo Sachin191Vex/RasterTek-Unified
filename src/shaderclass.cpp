@@ -24,25 +24,27 @@ ShaderClass::~ShaderClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
+bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useNormal)
 {
     bool result;
     wchar_t* vsFilename, *psFilename;
     int error;
 
-    vsFilename = L"../shaders/color.vs";
-    psFilename = L"../shaders/color.ps";
-    if (CHECK_RT_TEST_NUM(5)) {
+    if (!useTexture && !useNormal) {
+        vsFilename = L"../shaders/color.vs";
+        psFilename = L"../shaders/color.ps";
+    } else if (useTexture && !useNormal) {
         vsFilename = L"../shaders/texture.vs";
         psFilename = L"../shaders/texture.ps";
-    }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    } else if (useTexture && useNormal) {
         vsFilename = L"../shaders/light.vs";
         psFilename = L"../shaders/light.ps";
+    } else {
+        return false;
     }
 
     // Initialize the vertex and pixel shaders.
-    result = InitializeShader(device, hwnd, vsFilename, psFilename);
+    result = InitializeShader(device, hwnd, vsFilename, psFilename, useTexture, useNormal);
     if(!result) { return false; }
 
     return true;
@@ -87,26 +89,31 @@ bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMM
     }\
 }
 
-bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
-    unsigned int numElements;
+    unsigned int numInputLayoutElements;
     char *vsShaderName, *psShaderName;
 
     // Initialize the pointers this function will use to null.
     errorMessage = nullptr;
 
     // Step 1: Compile shaders -------------------------------------------------------------------------------------------
-    vsShaderName = "ColorVertexShader";
-    psShaderName = "ColorPixelShader";
-    if (CHECK_RT_TEST_NUM(5)) {
+    if (!useTexture && !useNormal) {
+        vsShaderName = "ColorVertexShader";
+        psShaderName = "ColorPixelShader";
+        numInputLayoutElements = 2;
+    } else if (useTexture && !useNormal) {
         vsShaderName = "TextureVertexShader";
         psShaderName = "TexturePixelShader";
-    }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+        numInputLayoutElements = 2;
+    } else if (useTexture && useNormal) {
         vsShaderName = "LightVertexShader";
         psShaderName = "LightPixelShader";
+        numInputLayoutElements = 3;
+    } else {
+        return false;
     }
 
     // Compile the vertex shader code.
@@ -133,10 +140,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // Step 3: Define inputs to vertex shader ----------------------------------------------------------------------------
     // Create the vertex input layout description.
     // This setup needs to match the VertexType stucture in the ModelClass and in the shader.
-    numElements = 2;
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { numElements = 3; } // For Tutorial 4 & 5 you need size only 2, fortuorial 6 we specifyc additonal normal 
-
-    D3D11_INPUT_ELEMENT_DESC *polygonLayout = new D3D11_INPUT_ELEMENT_DESC[numElements];
+    D3D11_INPUT_ELEMENT_DESC *polygonLayout = new D3D11_INPUT_ELEMENT_DESC[numInputLayoutElements];
     polygonLayout[0].SemanticName = "POSITION";
     polygonLayout[0].SemanticIndex = 0;
     polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -145,17 +149,17 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     polygonLayout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     polygonLayout[0].InstanceDataStepRate = 0;
 
-    if (CHECK_RT_TEST_NUM(4)) { polygonLayout[1].SemanticName = "COLOR"; }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { polygonLayout[1].SemanticName = "TEXCOORD"; }
+    polygonLayout[1].SemanticName = "COLOR";
+    if (useTexture) { polygonLayout[1].SemanticName = "TEXCOORD"; }
     polygonLayout[1].SemanticIndex = 0;
-    if (CHECK_RT_TEST_NUM(4)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT; }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
+    polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    if (useTexture) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
     polygonLayout[1].InputSlot = 0;
     polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
     polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     polygonLayout[1].InstanceDataStepRate = 0;
 
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (useNormal) {
         polygonLayout[2].SemanticName = "NORMAL";
         polygonLayout[2].SemanticIndex = 0;
         polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -169,7 +173,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
     // Create the vertex input layout.
-    result = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), 
+    result = device->CreateInputLayout(polygonLayout, numInputLayoutElements, vertexShaderBuffer->GetBufferPointer(),
                                        vertexShaderBuffer->GetBufferSize(), &m_layout);
     delete[] polygonLayout;
     if (FAILED(result)) { return false; }
@@ -204,7 +208,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // AddressU and AddressV are set to Wrap which ensures that the coordinates stay between 0.0f and 1.0f.
     // Anything outside of that wraps around and is placed between 0.0f and 1.0f.
     // All other settings for the sampler state description are defaults.
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (useTexture) {
         // Create a texture sampler state description.
         D3D11_SAMPLER_DESC samplerDesc;
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -232,7 +236,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // padding to make it 32.
     // Setup the description of the light dynamic constant buffer that is in the pixel shader.
     // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (useNormal) {
         D3D11_BUFFER_DESC lightBufferDesc;
         lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
         lightBufferDesc.ByteWidth = sizeof(LightBufferType);

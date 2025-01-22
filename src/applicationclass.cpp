@@ -29,6 +29,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     bool result;
     char *modelFilename = nullptr;
     char *textureFilename = nullptr;
+    bool useTexture = false;
     bool useNormal = false;
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
@@ -55,6 +56,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         textureFilename = new char[128];
         strcpy(textureFilename, "../data/textures/stone01.tga");
+        useTexture = true;
     }
     if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { useNormal = true; }
 
@@ -66,7 +68,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Create and initialize the shader object.
     m_Shader = new ShaderClass;
 
-    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd);
+    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd, useTexture, useNormal);
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the shader object.", "Error"); }
 
     // Create and initialize the light object.

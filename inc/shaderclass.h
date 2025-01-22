@@ -35,13 +35,13 @@ public:
     ShaderClass(const ShaderClass&);
     ~ShaderClass();
 
-    bool Initialize(ID3D11Device* device, HWND hwnd);
+    bool Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useNormal);
     void Shutdown();
     bool Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
         XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor);
 
 private:
-    bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename);
+    bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal);
     void ShutdownShader();
     void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
