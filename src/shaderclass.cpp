@@ -36,7 +36,7 @@ bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
         vsFilename = L"../shaders/texture.vs";
         psFilename = L"../shaders/texture.ps";
     }
-    if (CHECK_RT_TEST_NUM(6)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         vsFilename = L"../shaders/light.vs";
         psFilename = L"../shaders/light.ps";
     }
@@ -104,7 +104,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
         vsShaderName = "TextureVertexShader";
         psShaderName = "TexturePixelShader";
     }
-    if (CHECK_RT_TEST_NUM(6)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         vsShaderName = "LightVertexShader";
         psShaderName = "LightPixelShader";
     }
@@ -134,7 +134,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // Create the vertex input layout description.
     // This setup needs to match the VertexType stucture in the ModelClass and in the shader.
     numElements = 2;
-    if (CHECK_RT_TEST_NUM(6)) { numElements = 3; } // For Tutorial 4 & 5 you need size only 2, fortuorial 6 we specifyc additonal normal 
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { numElements = 3; } // For Tutorial 4 & 5 you need size only 2, fortuorial 6 we specifyc additonal normal 
 
     D3D11_INPUT_ELEMENT_DESC *polygonLayout = new D3D11_INPUT_ELEMENT_DESC[numElements];
     polygonLayout[0].SemanticName = "POSITION";
@@ -146,16 +146,16 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     polygonLayout[0].InstanceDataStepRate = 0;
 
     if (CHECK_RT_TEST_NUM(4)) { polygonLayout[1].SemanticName = "COLOR"; }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) { polygonLayout[1].SemanticName = "TEXCOORD"; }
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { polygonLayout[1].SemanticName = "TEXCOORD"; }
     polygonLayout[1].SemanticIndex = 0;
     if (CHECK_RT_TEST_NUM(4)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT; }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
     polygonLayout[1].InputSlot = 0;
     polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
     polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     polygonLayout[1].InstanceDataStepRate = 0;
 
-    if (CHECK_RT_TEST_NUM(6)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         polygonLayout[2].SemanticName = "NORMAL";
         polygonLayout[2].SemanticIndex = 0;
         polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -204,7 +204,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // AddressU and AddressV are set to Wrap which ensures that the coordinates stay between 0.0f and 1.0f.
     // Anything outside of that wraps around and is placed between 0.0f and 1.0f.
     // All other settings for the sampler state description are defaults.
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) {
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         // Create a texture sampler state description.
         D3D11_SAMPLER_DESC samplerDesc;
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -232,7 +232,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // padding to make it 32.
     // Setup the description of the light dynamic constant buffer that is in the pixel shader.
     // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
-    if (CHECK_RT_TEST_NUM(6)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         D3D11_BUFFER_DESC lightBufferDesc;
         lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
         lightBufferDesc.ByteWidth = sizeof(LightBufferType);

@@ -8,6 +8,8 @@
 using namespace DirectX;
 
 #include "textureclass.h"
+#include <fstream>
+using namespace std;
 
 // Class name: ModelClass
 class ModelClass
@@ -32,17 +34,26 @@ private:
         XMFLOAT3 normal;
     };
 
+	struct ModelType
+	{
+		float x, y, z;
+		float tu, tv;
+		float nx, ny, nz;
+	};
 public:
     ModelClass();
     ModelClass(const ModelClass&);
     ~ModelClass();
 
-    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename);
+    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename);
     void Shutdown();
     void Render(ID3D11DeviceContext* deviceContext);
 
     int GetIndexCount();
     ID3D11ShaderResourceView* GetTexture();
+
+	bool LoadModel(char*);
+	void ReleaseModel();
 
 private:
     bool InitializeBuffers(ID3D11Device* device);
@@ -55,6 +66,8 @@ private:
     ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
     int m_vertexCount, m_indexCount;
     TextureClass* m_Texture;
+
+	ModelType* m_model;
 };
 
 #endif

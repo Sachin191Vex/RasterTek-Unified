@@ -26,7 +26,8 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
-    char textureFilename[128];
+    char *modelFilename = nullptr;
+    char *textureFilename = nullptr;
     bool result;
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
@@ -42,12 +43,21 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
 
     // Step 3: Create and initialize the model object. -------------------------------------------------------------------
+    // Set the file name of the model.
     m_Model = new ModelClass;
 
-    // Set the name of the texture file that we will be loading.
-    strcpy_s(textureFilename, "../data/textures/stone01.tga");
-
-    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+    // Set the name of the model and texture file that we will be loading.
+    if (CHECK_RT_TEST_NUM(7)) {
+        modelFilename = new char[128];
+        strcpy(modelFilename, "../data/models/cube.txt");
+    }
+    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+        textureFilename = new char[128];
+        strcpy(textureFilename, "../data/textures/stone01.tga");
+    }
+    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename);
+    if (modelFilename != nullptr) { delete[] modelFilename; }
+    if (textureFilename != nullptr) { delete[] textureFilename; }
     if (!result) { SHOW_MSG_AND_REURN("Could not initialize the model object.", "Error"); }
 
     // Create and initialize the shader object.
@@ -159,7 +169,7 @@ bool ApplicationClass::Render(float rotation)
     m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
     // Here we rotate the world matrix by the rotation value so that when we render the triangle using this updated world matrix it will spin the triangle by the rotation amount.
-    if (CHECK_RT_TEST_NUM(6) == true) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         // Rotate the world matrix by the rotation value so that the triangle will spin.
         worldMatrix = XMMatrixRotationY(rotation);
     }
@@ -169,7 +179,7 @@ bool ApplicationClass::Render(float rotation)
 
     // 2-d: Render the model using the color shader.
     if (CHECK_RT_TEST_NUM(4)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, nullptr, m_Light->GetDirection(), m_Light->GetDiffuseColor()); }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor()); }
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor()); }
     if (!result) { return false; }
 
     // Step 3: Present the rendered scene to the screen. -----------------------------------------------------------------

@@ -7,6 +7,7 @@ ModelClass::ModelClass()
     m_vertexBuffer = nullptr;
     m_indexBuffer = nullptr;
     m_Texture = nullptr;
+    m_model = nullptr;
 }
 
 ModelClass::ModelClass(const ModelClass& other)
@@ -18,17 +19,25 @@ ModelClass::~ModelClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename)
 {
     bool result;
+
+    // Load in the model data.
+    if ( modelFilename != nullptr ) {
+        result = LoadModel(modelFilename);
+        if (!result) { return false; }
+    }
 
     // Initialize the vertex and index buffers.
     result = InitializeBuffers(device);
     if (!result) { return false; }
 
     // Load the texture for this model.
-    result = LoadTexture(device, deviceContext, textureFilename);
-    if (!result) { return false; }
+    if ( textureFilename != nullptr ) {
+        result = LoadTexture(device, deviceContext, textureFilename);
+        if (!result) { return false; }
+    }
 
     return true;
 }
@@ -40,6 +49,9 @@ void ModelClass::Shutdown()
 
     // Shutdown the vertex and index buffers.
     ShutdownBuffers();
+
+    // Release the model data.
+    ReleaseModel();
 
     return;
 }
@@ -73,11 +85,13 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     unsigned long* indices;
     HRESULT result;
 
-    // Set the number of vertices in the vertex array.
-    m_vertexCount = 3;
+    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) {
+        // Set the number of vertices in the vertex array.
+        m_vertexCount = 3;
 
-    // Set the number of indices in the index array.
-    m_indexCount = 3;
+        // Set the number of indices in the index array.
+        m_indexCount = 3;
+    }
 
     // Step 1: Fill both the vertex and index array -------------------------------------------------------------------
     // The points are created in the clockwise order of drawing them. If you do this counter clockwise it will think the triangle is facing
@@ -133,14 +147,30 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
         verticesTextureLight[2].texture = XMFLOAT2(1.0f, 1.0f);
         verticesTextureLight[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
     }
-
     // Create and load the index array with data.
     indices = new unsigned long[m_indexCount];
     if (!indices) { return false; }
 
-    indices[0] = 0;  // Bottom left.
-    indices[1] = 1;  // Top middle.
-    indices[2] = 2;  // Bottom right.
+    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) {
+        indices[0] = 0;  // Bottom left.
+        indices[1] = 1;  // Top middle.
+        indices[2] = 2;  // Bottom right.
+    }
+
+    if (CHECK_RT_TEST_NUM(7)) {
+        // Create the vertex array.
+        verticesTextureLight = new VertexTypeTextureLight[m_vertexCount];
+        if (!verticesTextureLight) { return false; }
+
+        // Load the vertex array and index array with data.
+        for (int i = 0; i < m_vertexCount; i++) {
+            verticesTextureLight[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+            verticesTextureLight[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
+            verticesTextureLight[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+
+            indices[i] = i;
+        }
+    }
 
     // Step 2: Create the vertex buffer and index buffer. ----------------------------------------------------------------
     // First fill out a description of the buffer. In the description the ByteWidth (size of the buffer) and the BindFlags (type of buffer) 
@@ -152,7 +182,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
     if (CHECK_RT_TEST_NUM(4)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeColor) * m_vertexCount; }
     if (CHECK_RT_TEST_NUM(5)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTexture) * m_vertexCount; }
-    if (CHECK_RT_TEST_NUM(6)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTextureLight) * m_vertexCount; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTextureLight) * m_vertexCount; }
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = 0;
     vertexBufferDesc.MiscFlags = 0;
@@ -162,7 +192,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     D3D11_SUBRESOURCE_DATA vertexData;
     if (CHECK_RT_TEST_NUM(4)) { vertexData.pSysMem = verticesColor; }
     if (CHECK_RT_TEST_NUM(5)) { vertexData.pSysMem = verticesTexture; }
-    if (CHECK_RT_TEST_NUM(6)) { vertexData.pSysMem = verticesTextureLight; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { vertexData.pSysMem = verticesTextureLight; }
     vertexData.SysMemPitch = 0;
     vertexData.SysMemSlicePitch = 0;
 
@@ -192,7 +222,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     // Release the arrays now that the vertex and index buffers have been created and loaded.
     if (CHECK_RT_TEST_NUM(4)) { delete[] verticesColor; verticesColor = nullptr; }
     if (CHECK_RT_TEST_NUM(5)) { delete[] verticesTexture; verticesTexture = nullptr; }
-    if (CHECK_RT_TEST_NUM(6)) { delete[] verticesTextureLight; verticesTextureLight = nullptr; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { delete[] verticesTextureLight; verticesTextureLight = nullptr; }
 
     delete [] indices;
     indices = 0;
@@ -247,6 +277,65 @@ void ModelClass::ReleaseTexture()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+// LoadModel function which handles loading the model data from the text file into the m_model array variable.
+// It opens the text file and reads in the vertex count first. After reading the vertex count it creates the ModelType
+// array and then reads each line into the array.Both the vertex count and index count are now set in this function.
+bool ModelClass::LoadModel(char* filename)
+{
+    ifstream fin;
+    char input;
+    int i;
+
+    // Open the model file.
+    fin.open(filename);
+
+    // If it could not open the file then exit.
+    if (fin.fail()) { return false; }
+
+    // Read up to the value of vertex count.
+    fin.get(input);
+    while (input != ':') { fin.get(input); }
+
+    // Read in the vertex count.
+    fin >> m_vertexCount;
+
+    // Set the number of indices to be the same as the vertex count.
+    m_indexCount = m_vertexCount;
+
+    // Create the model using the vertex count that was read in.
+    m_model = new ModelType[m_vertexCount];
+
+    // Read up to the beginning of the data.
+    fin.get(input);
+    while (input != ':') { fin.get(input); }
+    fin.get(input);
+    fin.get(input);
+
+    // Read in the vertex data.
+    for (i = 0; i < m_vertexCount; i++) {
+        fin >> m_model[i].x >> m_model[i].y >> m_model[i].z;
+        fin >> m_model[i].tu >> m_model[i].tv;
+        fin >> m_model[i].nx >> m_model[i].ny >> m_model[i].nz;
+    }
+
+    // Close the model file.
+    fin.close();
+
+    return true;
+}
+
+// The ReleaseModel function handles deleting the model data array.
+void ModelClass::ReleaseModel()
+{
+    if (m_model) {
+        delete[] m_model;
+        m_model = nullptr;
+    }
+
+    return;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
 // THe purpose of this function is to set the vertex buffer and index buffer as active on the input assembler in the GPU.
 // Once the GPU has an active vertex buffer it can then use the shader to render that buffer.
 // This function also defines how those buffers should be drawn such as triangles, lines, fans, and so forth.
@@ -257,9 +346,9 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
     // Set vertex buffer stride and offset.
     if (CHECK_RT_TEST_NUM(4)) { stride = sizeof(VertexTypeColor); }
-	if (CHECK_RT_TEST_NUM(5)) { stride = sizeof(VertexTypeTexture); }
-	if (CHECK_RT_TEST_NUM(6)) { stride = sizeof(VertexTypeTextureLight); }
-	offset = 0;
+    if (CHECK_RT_TEST_NUM(5)) { stride = sizeof(VertexTypeTexture); }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { stride = sizeof(VertexTypeTextureLight); }
+    offset = 0;
 
     // Set the vertex buffer to active in the input assembler so it can be rendered.
     deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
