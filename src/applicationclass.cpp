@@ -26,9 +26,10 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+    bool result;
     char *modelFilename = nullptr;
     char *textureFilename = nullptr;
-    bool result;
+    bool useNormal = false;
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
     m_Direct3D = new D3DClass();
@@ -51,11 +52,13 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         modelFilename = new char[128];
         strcpy(modelFilename, "../data/models/cube.txt");
     }
-    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
         textureFilename = new char[128];
         strcpy(textureFilename, "../data/textures/stone01.tga");
     }
-    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename);
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { useNormal = true; }
+
+    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useNormal);
     if (modelFilename != nullptr) { delete[] modelFilename; }
     if (textureFilename != nullptr) { delete[] textureFilename; }
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the model object.", "Error"); }

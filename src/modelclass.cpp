@@ -19,22 +19,26 @@ ModelClass::~ModelClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename, bool useNormal)
 {
     bool result;
+    bool useTexture, useModelFile;
+
+    useModelFile = (modelFilename != nullptr);
+    useTexture = (textureFilename != nullptr);
 
     // Load in the model data.
-    if ( modelFilename != nullptr ) {
+    if (useModelFile) {
         result = LoadModel(modelFilename);
         if (!result) { return false; }
     }
 
     // Initialize the vertex and index buffers.
-    result = InitializeBuffers(device);
+    result = InitializeBuffers(device, useTexture, useNormal, useModelFile);
     if (!result) { return false; }
 
     // Load the texture for this model.
-    if ( textureFilename != nullptr ) {
+    if (useTexture) {
         result = LoadTexture(device, deviceContext, textureFilename);
         if (!result) { return false; }
     }
@@ -77,21 +81,14 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ModelClass::InitializeBuffers(ID3D11Device* device)
+bool ModelClass::InitializeBuffers(ID3D11Device* device, bool useTexture, bool useNormal, bool useModelFile)
 {
     VertexTypeColor* verticesColor;
     VertexTypeTexture* verticesTexture;
     VertexTypeTextureLight* verticesTextureLight;
     unsigned long* indices;
+    unsigned long stride;
     HRESULT result;
-
-    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) {
-        // Set the number of vertices in the vertex array.
-        m_vertexCount = 3;
-
-        // Set the number of indices in the index array.
-        m_indexCount = 3;
-    }
 
     // Step 1: Fill both the vertex and index array -------------------------------------------------------------------
     // The points are created in the clockwise order of drawing them. If you do this counter clockwise it will think the triangle is facing
@@ -99,66 +96,84 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     // Always remember that the order in which you send your vertices to the GPU is very important.
     // The color is set here as well since it is part of the vertex description.
     // Load the vertex array with data.
-    if (CHECK_RT_TEST_NUM(4)) {
-        // Create the vertex array.
-        verticesColor = new VertexTypeColor[m_vertexCount];
-        if (!verticesColor) { return false; }
 
-        verticesColor[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-        verticesColor[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+    // If model file is not used, model data will be hardcoded during initialization
+    // If model files is used, data should loaded before calling this functon
+    if (!useModelFile) {
+        // Set the number of vertices in the vertex array.
+        m_vertexCount = 3;
 
-        verticesColor[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-        verticesColor[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+        // Set the number of indices in the index array.
+        m_indexCount = 3;
 
-        verticesColor[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-        verticesColor[2].color = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-    }
-    if (CHECK_RT_TEST_NUM(5)) {
-        // Create the vertex array.
-        verticesTexture = new VertexTypeTexture[m_vertexCount];
-        if (!verticesTexture) { return false; }
+        // Create and load the index array with data.
+        indices = new unsigned long[m_indexCount];
+        if (!indices) { return false; }
 
-        verticesTexture[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-        verticesTexture[0].texture = XMFLOAT2(0.0f, 1.0f);
-
-        verticesTexture[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-        verticesTexture[1].texture = XMFLOAT2(0.5f, 0.0f);
-
-        verticesTexture[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-        verticesTexture[2].texture = XMFLOAT2(1.0f, 1.0f);
-    }
-    if (CHECK_RT_TEST_NUM(6)) {
-        // Create the vertex array.
-        verticesTextureLight = new VertexTypeTextureLight[m_vertexCount];
-        if (!verticesTextureLight) { return false; }
-
-        // Each vertex now has normals associated with it for lighting calculations. 
-        // The normal is a line that is perpendicular to the face of the polygon so that the exact direction the face is pointing can be calculated.
-        // For simplicity purposes I set the normal for each vertex along the Z axis by setting each Z component to -1.0f which makes the normal point towards the viewer.
-        verticesTextureLight[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-        verticesTextureLight[0].texture = XMFLOAT2(0.0f, 1.0f);
-        verticesTextureLight[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-        verticesTextureLight[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-        verticesTextureLight[1].texture = XMFLOAT2(0.5f, 0.0f);
-        verticesTextureLight[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-
-        verticesTextureLight[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-        verticesTextureLight[2].texture = XMFLOAT2(1.0f, 1.0f);
-        verticesTextureLight[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-    }
-    // Create and load the index array with data.
-    indices = new unsigned long[m_indexCount];
-    if (!indices) { return false; }
-
-    if (CHECK_RT_TEST_NUM(4) || CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6)) {
         indices[0] = 0;  // Bottom left.
         indices[1] = 1;  // Top middle.
         indices[2] = 2;  // Bottom right.
-    }
 
-    if (CHECK_RT_TEST_NUM(7)) {
+        // Create vertices array and assigned values
+        if (!useTexture && !useNormal) {
+            // Create the vertex array.
+            stride = sizeof(VertexTypeColor);
+            verticesColor = new VertexTypeColor[m_vertexCount];
+            if (!verticesColor) { return false; }
+
+            verticesColor[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+            verticesColor[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+
+            verticesColor[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+            verticesColor[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+
+            verticesColor[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+            verticesColor[2].color = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+        } else if (useTexture && !useNormal) {
+            // Create the vertex array.
+            stride = sizeof(VertexTypeTexture);
+            verticesTexture = new VertexTypeTexture[m_vertexCount];
+            if (!verticesTexture) { return false; }
+
+            verticesTexture[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+            verticesTexture[0].texture = XMFLOAT2(0.0f, 1.0f);
+
+            verticesTexture[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+            verticesTexture[1].texture = XMFLOAT2(0.5f, 0.0f);
+
+            verticesTexture[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+            verticesTexture[2].texture = XMFLOAT2(1.0f, 1.0f);
+        } else if (useTexture && useNormal) {
+            // Create the vertex array.
+            stride = sizeof(VertexTypeTextureLight);
+            verticesTextureLight = new VertexTypeTextureLight[m_vertexCount];
+            if (!verticesTextureLight) { return false; }
+
+            // Each vertex now has normals associated with it for lighting calculations. 
+            // The normal is a line that is perpendicular to the face of the polygon so that the exact direction the face is pointing can be calculated.
+            // For simplicity purposes I set the normal for each vertex along the Z axis by setting each Z component to -1.0f which makes the normal point towards the viewer.
+            verticesTextureLight[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+            verticesTextureLight[0].texture = XMFLOAT2(0.0f, 1.0f);
+            verticesTextureLight[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+
+            verticesTextureLight[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+            verticesTextureLight[1].texture = XMFLOAT2(0.5f, 0.0f);
+            verticesTextureLight[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+
+            verticesTextureLight[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+            verticesTextureLight[2].texture = XMFLOAT2(1.0f, 1.0f);
+            verticesTextureLight[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+        } else {
+            return false;
+        }
+    }
+    else {
+        // Create and load the index array with data.
+        indices = new unsigned long[m_indexCount];
+        if (!indices) { return false; }
+
         // Create the vertex array.
+        stride = sizeof(VertexTypeTextureLight);
         verticesTextureLight = new VertexTypeTextureLight[m_vertexCount];
         if (!verticesTextureLight) { return false; }
 
@@ -172,6 +187,9 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
         }
     }
 
+    // Store stride value as it will be equired when we senf VertextDat to pipeline durng every Render pass
+    StoreVertexBufferStride(stride);
+
     // Step 2: Create the vertex buffer and index buffer. ----------------------------------------------------------------
     // First fill out a description of the buffer. In the description the ByteWidth (size of the buffer) and the BindFlags (type of buffer) 
     // are what you need to ensure are filled out correctly.
@@ -180,9 +198,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     // Set up the description of the static vertex buffer.
     D3D11_BUFFER_DESC vertexBufferDesc;
     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    if (CHECK_RT_TEST_NUM(4)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeColor) * m_vertexCount; }
-    if (CHECK_RT_TEST_NUM(5)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTexture) * m_vertexCount; }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTextureLight) * m_vertexCount; }
+    if (!useTexture && !useNormal) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeColor) * m_vertexCount; }
+    else if (useTexture && !useNormal) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTexture) * m_vertexCount; }
+    else if (useTexture && useNormal) { vertexBufferDesc.ByteWidth = sizeof(VertexTypeTextureLight) * m_vertexCount; }
+    else { return false; }
     vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vertexBufferDesc.CPUAccessFlags = 0;
     vertexBufferDesc.MiscFlags = 0;
@@ -190,9 +209,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
     // Give the subresource structure a pointer to the vertex data.
     D3D11_SUBRESOURCE_DATA vertexData;
-    if (CHECK_RT_TEST_NUM(4)) { vertexData.pSysMem = verticesColor; }
-    if (CHECK_RT_TEST_NUM(5)) { vertexData.pSysMem = verticesTexture; }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { vertexData.pSysMem = verticesTextureLight; }
+    if (!useTexture && !useNormal) { vertexData.pSysMem = verticesColor; }
+    else if (useTexture && !useNormal) { vertexData.pSysMem = verticesTexture; }
+    else if (useTexture && useNormal) { vertexData.pSysMem = verticesTextureLight; }
+    else { return false; }
     vertexData.SysMemPitch = 0;
     vertexData.SysMemSlicePitch = 0;
 
@@ -220,9 +240,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
     if (FAILED(result)) { return false; }
 
     // Release the arrays now that the vertex and index buffers have been created and loaded.
-    if (CHECK_RT_TEST_NUM(4)) { delete[] verticesColor; verticesColor = nullptr; }
-    if (CHECK_RT_TEST_NUM(5)) { delete[] verticesTexture; verticesTexture = nullptr; }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { delete[] verticesTextureLight; verticesTextureLight = nullptr; }
+    if (!useTexture && !useNormal) { delete[] verticesColor; verticesColor = nullptr; }
+    else if (useTexture && !useNormal) { delete[] verticesTexture; verticesTexture = nullptr; }
+    else if (useTexture && useNormal) { delete[] verticesTextureLight; verticesTextureLight = nullptr; }
+    else { return false; }
 
     delete [] indices;
     indices = 0;
@@ -345,10 +366,8 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
     unsigned int offset;
 
     // Set vertex buffer stride and offset.
-    if (CHECK_RT_TEST_NUM(4)) { stride = sizeof(VertexTypeColor); }
-    if (CHECK_RT_TEST_NUM(5)) { stride = sizeof(VertexTypeTexture); }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { stride = sizeof(VertexTypeTextureLight); }
     offset = 0;
+    stride = GetVertexBufferStride();
 
     // Set the vertex buffer to active in the input assembler so it can be rendered.
     deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);

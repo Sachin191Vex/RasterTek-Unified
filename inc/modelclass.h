@@ -34,40 +34,44 @@ private:
         XMFLOAT3 normal;
     };
 
-	struct ModelType
-	{
-		float x, y, z;
-		float tu, tv;
-		float nx, ny, nz;
-	};
+    struct ModelType
+    {
+        float x, y, z;
+        float tu, tv;
+        float nx, ny, nz;
+    };
 public:
     ModelClass();
     ModelClass(const ModelClass&);
     ~ModelClass();
 
-    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename);
+    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename, bool useNormal);
     void Shutdown();
     void Render(ID3D11DeviceContext* deviceContext);
 
     int GetIndexCount();
     ID3D11ShaderResourceView* GetTexture();
 
-	bool LoadModel(char*);
-	void ReleaseModel();
+    bool LoadModel(char*);
+    void ReleaseModel();
 
 private:
-    bool InitializeBuffers(ID3D11Device* device);
+    bool InitializeBuffers(ID3D11Device* device, bool useTexture, bool useNormal, bool useModelFile);
     void ShutdownBuffers();
     void RenderBuffers(ID3D11DeviceContext* deviceContext);
     bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
     void ReleaseTexture();
+
+    void StoreVertexBufferStride(unsigned int value) { m_vertexBufferStride = value; }
+    unsigned int GetVertexBufferStride() { return m_vertexBufferStride; }
 
 private:
     ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
     int m_vertexCount, m_indexCount;
     TextureClass* m_Texture;
 
-	ModelType* m_model;
+    ModelType* m_model;
+    unsigned int m_vertexBufferStride;
 };
 
 #endif
