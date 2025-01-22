@@ -183,8 +183,8 @@ bool ApplicationClass::Render(float rotation)
     m_Model->Render(m_Direct3D->GetDeviceContext());
 
     // 2-d: Render the model using the color shader.
-    if (CHECK_RT_TEST_NUM(4)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, nullptr, m_Light->GetDirection(), m_Light->GetDiffuseColor()); }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) { result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor()); }
+    ID3D11ShaderResourceView* texture = m_Model->GetTexture();
+    result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture, m_Light->GetDirection(), m_Light->GetDiffuseColor());
     if (!result) { return false; }
 
     // Step 3: Present the rendered scene to the screen. -----------------------------------------------------------------

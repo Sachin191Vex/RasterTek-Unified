@@ -77,6 +77,7 @@ int ModelClass::GetIndexCount()
 
 ID3D11ShaderResourceView* ModelClass::GetTexture()
 {
+    if (m_Texture == nullptr) { return nullptr; }
     return m_Texture->GetTexture();
 }
 

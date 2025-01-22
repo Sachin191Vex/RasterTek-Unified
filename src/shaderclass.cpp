@@ -367,9 +367,8 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     // Finanly set the constant buffer in the vertex shader with the updated values.
     deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
-    // Step 3: Set shader resource if specified
+    // Step 3: Set shader resource view if specified
     if ( texture != nullptr ) {
-        // Set shader texture resource in the pixel shader.
         deviceContext->PSSetShaderResources(0, 1, &texture);
     }
 
