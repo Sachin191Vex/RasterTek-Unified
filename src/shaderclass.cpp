@@ -60,12 +60,16 @@ void ShaderClass::Shutdown()
 
 // --------------------------------------------------------------------------------------------------------------------
 bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-                              XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
+                         XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
+                         bool useAmbientLight,  XMFLOAT4 ambientColor,
+                         bool useDiffusedLight, XMFLOAT4 diffuseColor, XMFLOAT3 lightDirection)
 {
     bool result;
 
     // Set the shader parameters that it will use for rendering.
-    result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, diffuseColor);
+    result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture,
+                                 useAmbientLight, ambientColor,
+                                 useDiffusedLight, diffuseColor, lightDirection);
     if (!result) { return false; }
 
     // Now render the prepared buffers with the shader.
@@ -239,7 +243,8 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     if (useNormal) {
         D3D11_BUFFER_DESC lightBufferDesc;
         lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+        lightBufferDesc.ByteWidth = sizeof(LightBufferType);      // Check here that size is multiple of 16
+        assert((lightBufferDesc.ByteWidth % 16) == 0);
         lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         lightBufferDesc.MiscFlags = 0;
@@ -333,9 +338,11 @@ void ShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, 
 // to send them from there into the vertex shader during the Render function call.
 bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                                       XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
-                                      XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor)
+                                      bool useAmbientLight, XMFLOAT4 ambientColor,
+                                      bool useDiffuseLight, XMFLOAT4 diffuseColor, XMFLOAT3 lightDirection)
 {
     HRESULT result;
+    bool useTexture = false;
     unsigned int bufferNumber;
 
     // Step 1: Transpose matrices before sending them into the shader, this is a requirement for DirectX 11.
@@ -369,6 +376,7 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
 
     // Step 3: Set shader resource view if specified
     if ( texture != nullptr ) {
+        useTexture = true;
         deviceContext->PSSetShaderResources(0, 1, &texture);
     }
 
@@ -386,9 +394,14 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
         dataPtr2 = (LightBufferType*)mappedResource.pData;
 
         // Copy the lighting variables into the constant buffer.
+        dataPtr2->ambientColor = ambientColor;
         dataPtr2->diffuseColor = diffuseColor;
         dataPtr2->lightDirection = lightDirection;
-        dataPtr2->padding = 0.0f;
+        // dataPtr2->padding = 0.0f;
+        dataPtr2->useTexture = useTexture;
+        dataPtr2->useAmbientLight = useAmbientLight;
+        dataPtr2->useDiffuseLight = useDiffuseLight;
+        dataPtr2->tmp = false;
 
         // Unlock the constant buffer.
         deviceContext->Unmap(m_lightBuffer, 0);

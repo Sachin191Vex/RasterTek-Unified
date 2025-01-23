@@ -25,9 +25,15 @@ private:
 
     struct LightBufferType
     {
+        XMFLOAT4 ambientColor;
         XMFLOAT4 diffuseColor;
         XMFLOAT3 lightDirection;
-        float padding;  // Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+        // float padding;  // Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+
+        bool useTexture;
+        bool useAmbientLight;
+        bool useDiffuseLight;
+        bool tmp;
     };
 
 public:
@@ -38,7 +44,9 @@ public:
     bool Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useNormal);
     void Shutdown();
     bool Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-        XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor);
+                XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
+                bool useAmbientLight, XMFLOAT4 ambientColor,
+                bool useDiffuseLight, XMFLOAT4 diffuseColor, XMFLOAT3 lightDirection);
 
 private:
     bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal);
@@ -46,7 +54,9 @@ private:
     void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
     bool SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-        XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT3 lightDirection, XMFLOAT4 diffuseColor);
+                             XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
+                             bool useAmbientLight, XMFLOAT4 ambientColor,
+                             bool useDiffuseLight, XMFLOAT4 diffuseColor, XMFLOAT3 lightDirection);
     void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
 
 private:

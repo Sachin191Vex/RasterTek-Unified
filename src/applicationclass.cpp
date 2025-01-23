@@ -53,16 +53,16 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     m_Model = new ModelClass;
 
     // Set the name of the model and texture file that we will be loading.
-    if (CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) {
+    if (CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) {
         modelFilename = new char[128];
         strcpy(modelFilename, "../data/models/cube.txt");
     }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) {
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) {
         textureFilename = new char[128];
         strcpy(textureFilename, "../data/textures/stone01.tga");
         useTexture = true;
     }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8)) { useNormal = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) { useNormal = true; }
 
     result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useNormal);
     if (modelFilename != nullptr) { delete[] modelFilename; }
@@ -79,6 +79,9 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // The color of the light is set to white and the light direction is set to point down the positive Z axis.
     m_Light = new LightClass;
 
+    if (CHECK_RT_TEST_NUM(9)) {
+        m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
+    }
     m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
     m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 
@@ -198,12 +201,12 @@ bool ApplicationClass::Render(float rotation)
     m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
     // Here we rotate the world matrix by the rotation value so that when we render the triangle using this updated world matrix it will spin the triangle by the rotation amount.
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(9)) {
         // Rotate the world matrix by the rotation value so that the triangle will spin.
         worldMatrix = XMMatrixRotationY(rotation);
     }
     if (CHECK_RT_TEST_NUM(8)) {
-        // Key ont: Multiplu in SRT porder as decribed above
+        // Key ont: Multiply in SRT order as described above
         rotateMatrix = XMMatrixRotationY(rotation);  // Build the rotation matrix.
         translateMatrix = XMMatrixTranslation(-2.0f, 0.0f, 0.0f);  // Build the translation matrix.
 
@@ -214,8 +217,14 @@ bool ApplicationClass::Render(float rotation)
     m_Model->Render(m_Direct3D->GetDeviceContext());
 
     // 2-d: Render the model using the color shader.
+    bool useAmbientLight = false;
+    bool useDiffuseLight = true;
+    if (CHECK_RT_TEST_NUM(9)) { useAmbientLight = true; }
+
     ID3D11ShaderResourceView* texture = m_Model->GetTexture();
-    result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture, m_Light->GetDirection(), m_Light->GetDiffuseColor());
+    result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture,
+                              useAmbientLight, m_Light->GetAmbientColor(),
+                              useDiffuseLight, m_Light->GetDiffuseColor(), m_Light->GetDirection());
     if (!result) { return false; }
 
     if (CHECK_RT_TEST_NUM(8)) {
@@ -232,7 +241,10 @@ bool ApplicationClass::Render(float rotation)
         m_Model->Render(m_Direct3D->GetDeviceContext());
 
         // Render the model using the light shader.
-        result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
+        result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+                                  m_Model->GetTexture(),
+                                  useAmbientLight, m_Light->GetAmbientColor(),
+                                  useDiffuseLight, m_Light->GetDiffuseColor(), m_Light->GetDirection() );
         if (!result) { return false; }
     }
 
