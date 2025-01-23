@@ -31,6 +31,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     char *textureFilename = nullptr;
     bool useTexture = false;
     bool useNormal = false;
+    bool useSpecular = false;
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
     m_Direct3D = new D3DClass();
@@ -57,12 +58,17 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         modelFilename = new char[128];
         strcpy(modelFilename, "../data/models/cube.txt");
     }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) {
+    if (CHECK_RT_TEST_NUM(10)) {
+        modelFilename = new char[128];
+        strcpy(modelFilename, "../data/models/sphere.txt");
+    }
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
         textureFilename = new char[128];
         strcpy(textureFilename, "../data/textures/stone01.tga");
         useTexture = true;
     }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) { useNormal = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) { useNormal = true; }
+    if (CHECK_RT_TEST_NUM(10)) { useSpecular = true; }
 
     result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useNormal);
     if (modelFilename != nullptr) { delete[] modelFilename; }
@@ -72,7 +78,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Create and initialize the shader object.
     m_Shader = new ShaderClass;
 
-    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd, useTexture, useNormal);
+    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd, useTexture, useNormal, useSpecular);
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the shader object.", "Error"); }
 
     // Create and initialize the light object.
@@ -84,6 +90,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     }
     m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
     m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+    if (CHECK_RT_TEST_NUM(10)) {
+        m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Light->SetSpecularPower(32.0f);
+    }
 
     return true;
 }
@@ -201,7 +211,7 @@ bool ApplicationClass::Render(float rotation)
     m_Direct3D->GetProjectionMatrix(projectionMatrix);
 
     // Here we rotate the world matrix by the rotation value so that when we render the triangle using this updated world matrix it will spin the triangle by the rotation amount.
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(9)) {
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
         // Rotate the world matrix by the rotation value so that the triangle will spin.
         worldMatrix = XMMatrixRotationY(rotation);
     }
@@ -219,12 +229,16 @@ bool ApplicationClass::Render(float rotation)
     // 2-d: Render the model using the color shader.
     bool useAmbientLight = false;
     bool useDiffuseLight = true;
-    if (CHECK_RT_TEST_NUM(9)) { useAmbientLight = true; }
+    bool useSpecularLight = false;
+    if (CHECK_RT_TEST_NUM(9))  { useAmbientLight = true; }
+    if (CHECK_RT_TEST_NUM(10)) { useSpecularLight = true; }
 
     ID3D11ShaderResourceView* texture = m_Model->GetTexture();
     result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture,
+                              m_Light->GetDirection(),
                               useAmbientLight, m_Light->GetAmbientColor(),
-                              useDiffuseLight, m_Light->GetDiffuseColor(), m_Light->GetDirection());
+                              useDiffuseLight, m_Light->GetDiffuseColor(),
+                              useSpecularLight, m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
     if (!result) { return false; }
 
     if (CHECK_RT_TEST_NUM(8)) {
@@ -243,8 +257,10 @@ bool ApplicationClass::Render(float rotation)
         // Render the model using the light shader.
         result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
                                   m_Model->GetTexture(),
+                                  m_Light->GetDirection(),
                                   useAmbientLight, m_Light->GetAmbientColor(),
-                                  useDiffuseLight, m_Light->GetDiffuseColor(), m_Light->GetDirection() );
+                                  useDiffuseLight, m_Light->GetDiffuseColor(),
+                                  useSpecularLight, m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
         if (!result) { return false; }
     }
 
