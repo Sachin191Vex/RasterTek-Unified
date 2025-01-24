@@ -10,8 +10,7 @@ cbuffer MatrixBuffer
 cbuffer CameraBuffer
 {
     float3 cameraPosition;
-    bool calcViewDirection;
-    bool padding[3];
+    uint calcViewDirection;
 };
 
 // TYPEDEFS

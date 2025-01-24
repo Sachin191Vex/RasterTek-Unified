@@ -41,9 +41,9 @@ private:
     struct CameraBufferType
     {
         XMFLOAT3 cameraPosition;
-        bool calcViewDirection;
-        bool padding[3];			// Padding to make it multiple of 16
+        unsigned int calcViewDirection;
     };
+
 public:
     ShaderClass();
     ShaderClass(const ShaderClass&);
