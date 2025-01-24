@@ -264,60 +264,27 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     return true;
 }
 
+#define RELEASE_ID3D11_PTR(ID3D11_ptr) {\
+    if (ID3D11_ptr) {\
+        ID3D11_ptr->Release();\
+        ID3D11_ptr = nullptr;\
+    }\
+}
+
 void ShaderClass::ShutdownShader()
 {
-    // Release the camera constant buffer.
-    if (m_cameraBuffer) {
-        m_cameraBuffer->Release();
-        m_cameraBuffer = 0;
-    }
+    // Release the created constant buffers.
+    RELEASE_ID3D11_PTR(m_cameraBuffer);
+    RELEASE_ID3D11_PTR(m_lightBuffer);
+    RELEASE_ID3D11_PTR(m_lightConfigBuffer);
+    RELEASE_ID3D11_PTR(m_textureConfigBuffer);
+    RELEASE_ID3D11_PTR(m_matrixBuffer);
 
-    // Release the textue config constant buffer.
-    if (m_textureConfigBuffer) {
-        m_textureConfigBuffer->Release();
-        m_textureConfigBuffer = 0;
-    }
-
-    // Release the light config constant buffer.
-    if (m_lightConfigBuffer) {
-        m_lightConfigBuffer->Release();
-        m_lightConfigBuffer = 0;
-    }
-
-    // Release the light constant buffer.
-    if (m_lightBuffer) {
-        m_lightBuffer->Release();
-        m_lightBuffer = 0;
-    }
-    // Release the sampler state.
-    if (m_sampleState) {
-        m_sampleState->Release();
-        m_sampleState = nullptr;
-    }
-
-    // Release the matrix constant buffer.
-    if(m_matrixBuffer) {
-        m_matrixBuffer->Release();
-        m_matrixBuffer = nullptr;
-    }
-
-    // Release the layout.
-    if(m_layout) {
-        m_layout->Release();
-        m_layout = nullptr;
-    }
-
-    // Release the pixel shader.
-    if(m_pixelShader) {
-        m_pixelShader->Release();
-        m_pixelShader = nullptr;
-    }
-
-    // Release the vertex shader.
-    if(m_vertexShader) {
-        m_vertexShader->Release();
-        m_vertexShader = nullptr;
-    }
+    // Release the created sampler state, input layout and shader buffers
+    RELEASE_ID3D11_PTR(m_sampleState);
+    RELEASE_ID3D11_PTR(m_layout);
+    RELEASE_ID3D11_PTR(m_pixelShader);
+    RELEASE_ID3D11_PTR(m_vertexShader);
 
     return;
 }
