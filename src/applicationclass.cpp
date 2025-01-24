@@ -85,7 +85,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // The color of the light is set to white and the light direction is set to point down the positive Z axis.
     m_Light = new LightClass;
 
-    if (CHECK_RT_TEST_NUM(9)) {
+    if (CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
         m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
     }
     m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -94,6 +94,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         m_Light->SetDirection(1.0f, 0.0f, 0.0f);
     }
     if (CHECK_RT_TEST_NUM(10)) {
+        m_Light->SetDirection(1.0f, 0.0f, 1.0f);
         m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
         m_Light->SetSpecularPower(32.0f);
     }
