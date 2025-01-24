@@ -44,7 +44,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
     // Set the initial position of the camera.
     m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
-    if (CHECK_RT_TEST_NUM(8)) {
+    if (CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) {
         // Move the camera back another 5 units so that we can see both cubes easily.
         m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
     }
@@ -90,6 +90,9 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     }
     m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
     m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+    if (CHECK_RT_TEST_NUM(9)) {
+        m_Light->SetDirection(1.0f, 0.0f, 0.0f);
+    }
     if (CHECK_RT_TEST_NUM(10)) {
         m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
         m_Light->SetSpecularPower(32.0f);
