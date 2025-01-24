@@ -458,7 +458,7 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
         dataPtr2->useAmbientLight = useAmbientLight;
         dataPtr2->useDiffuseLight = useDiffuseLight;
         dataPtr2->useSpecularLight = useSpecularLight;
-        dataPtr2->tmp = XMFLOAT3(0.0f, 0.0f, 0.0f);
+        // dataPtr2->tmp = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
         // Unlock the constant buffer.
         deviceContext->Unmap(m_lightBuffer, 0);

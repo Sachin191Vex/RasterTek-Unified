@@ -31,11 +31,11 @@ private:
         float specularPower;
         XMFLOAT4 specularColor;
 
-        bool useTexture;
-        bool useAmbientLight;
-        bool useDiffuseLight;
-        bool useSpecularLight;
-        XMFLOAT3 tmp;				// Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+        unsigned int useTexture;
+        unsigned int useAmbientLight;
+        unsigned int useDiffuseLight;
+        unsigned int useSpecularLight;
+        // XMFLOAT3 tmp;				// Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
     struct CameraBufferType
