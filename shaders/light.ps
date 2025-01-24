@@ -47,6 +47,11 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     // Do these calculation only if lighting is needed
     if (useAmbientLight || useDiffuseLight || useSpecularLight) {
         if (useAmbientLight) {
+            // Initialize the specular color.
+            specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+        if (useAmbientLight) {
             // Set the default output color to the ambient light value for all pixels.
             light = ambientColor;
         }
