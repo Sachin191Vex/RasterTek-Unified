@@ -46,41 +46,47 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 
     // Do these calculation only if lighting is needed
     if (useAmbientLight || useDiffuseLight || useSpecularLight) {
-        // Invert the light direction for calculations.
-        lightDir = -lightDirection;
-
-        // Calculate the amount of light on this pixel.
-        lightIntensity = saturate(dot(input.normal, lightDir));
-
-        // diffuse color could be negative and it will subtract away some of the ambient color in the addition which is not correct.
-        if (useAmbientLight && (lightIntensity > 0.0f)) {
-            // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
-            light = ambientColor + saturate(diffuseColor * lightIntensity);
-        } else {
-            // Determine the final amount of diffuse color based on the diffuse color combined with the light intensity.
-            light = diffuseColor * lightIntensity;
+        if (useAmbientLight) {
+            // Set the default output color to the ambient light value for all pixels.
+            light = ambientColor;
         }
 
-        // Saturate the final light color.
-        light = saturate(light);
+        if (useDiffuseLight || useSpecularLight) {
+            // Invert the light direction for calculations.
+            lightDir = -lightDirection;
 
-        if (useSpecularLight) {
-            // Initialize the specular color.
-            specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
+            // Calculate the amount of light on this pixel.
+            lightIntensity = saturate(dot(input.normal, lightDir));
 
-            // Calculate the reflection vector based on the light intensity, normal vector, and light direction.
-            reflection = normalize(2.0f * lightIntensity * input.normal - lightDir); 
+            if ( useDiffuseLight && !useSpecularLight ) {
+                // Determine the final amount of diffuse color based on the diffuse color combined with the light intensity.
+                light = saturate(diffuseColor * lightIntensity);
+            } else {
+                if(lightIntensity > 0.0f)
+                {
+                    // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
+                    light += (diffuseColor * lightIntensity);
 
-            // Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
-            specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
-        }
+                    // Saturate the ambient and diffuse color.
+                    light = saturate(light);
 
-        // Multiply the texture pixel and the final diffuse color to get the final pixel color result.
-        color = light * color;
+                    if (useSpecularLight) {
+                        // Calculate the reflection vector based on the light intensity, normal vector, and light direction.
+                        reflection = normalize(2.0f * lightIntensity * input.normal - lightDir);
 
-        if (useSpecularLight) {
-            // Add the specular component last to the output color.
-            color = saturate(color + specular);
+                        // Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
+                        specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+                    }
+                }
+            }
+
+            // Multiply the texture pixel and the final diffuse color to get the final pixel color result.
+            color = light * color;
+
+            if (useSpecularLight) {
+                // Add the specular component last to the output color.
+                color = saturate(color + specular);
+            }
         }
     }
 
