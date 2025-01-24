@@ -22,7 +22,18 @@ private:
         XMMATRIX view;
         XMMATRIX projection;
     };
-
+    struct TextureConfigBufferType
+    {
+        unsigned int useTexture;
+        XMFLOAT3 tmp;                  // Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+    };
+    struct LightConfigBufferType
+    {
+        unsigned int useAmbientLight;
+        unsigned int useDiffuseLight;
+        unsigned int useSpecularLight;
+        float padding;                 // Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+    };
     struct LightBufferType
     {
         XMFLOAT4 ambientColor;
@@ -30,14 +41,7 @@ private:
         XMFLOAT3 lightDirection;
         float specularPower;
         XMFLOAT4 specularColor;
-
-        unsigned int useTexture;
-        unsigned int useAmbientLight;
-        unsigned int useDiffuseLight;
-        unsigned int useSpecularLight;
-        // XMFLOAT3 tmp;				// Added extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
-
     struct CameraBufferType
     {
         XMFLOAT3 cameraPosition;
@@ -78,6 +82,8 @@ private:
     ID3D11SamplerState* m_sampleState;
 
     ID3D11Buffer* m_matrixBuffer;
+    ID3D11Buffer* m_textureConfigBuffer;
+    ID3D11Buffer* m_lightConfigBuffer;
     ID3D11Buffer* m_lightBuffer;
     ID3D11Buffer* m_cameraBuffer;
 };

@@ -13,6 +13,8 @@ ShaderClass::ShaderClass()
     m_sampleState = nullptr;
     
     m_matrixBuffer = nullptr;
+    m_textureConfigBuffer = nullptr;
+    m_lightConfigBuffer = nullptr;
     m_lightBuffer = nullptr;
     m_cameraBuffer = nullptr;
 }
@@ -97,6 +99,20 @@ bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMM
         }\
         return false;\
     }\
+}
+
+#define CREATE_CBUFFER(cbuffer, cbuffer_type) {\
+    D3D11_BUFFER_DESC cBufferDesc;\
+    cBufferDesc.Usage = D3D11_USAGE_DYNAMIC;\
+    cBufferDesc.ByteWidth = sizeof(cbuffer_type); /* Check here that size is multiple of 16 */\
+    assert((cBufferDesc.ByteWidth % 16) == 0); \
+    cBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;\
+    cBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;\
+    cBufferDesc.MiscFlags = 0;\
+    cBufferDesc.StructureByteStride = 0;\
+    /* Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.*/\
+    result = device->CreateBuffer(&cBufferDesc, NULL, &cbuffer);\
+    if (FAILED(result)) { return false; }\
 }
 
 bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal, bool useSpecular)
@@ -200,17 +216,8 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // The buffer usage needs to be set to dynamic since we will be updating it each frame.
     // The bind flags indicate that this buffer will be a constant buffer.
     // The CPU access flags need to match up with the usage so it is set to D3D11_CPU_ACCESS_WRITE.
-    D3D11_BUFFER_DESC matrixBufferDesc;
-    matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
-    matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    matrixBufferDesc.MiscFlags = 0;
-    matrixBufferDesc.StructureByteStride = 0;
-
-    // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-    result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
-    if (FAILED(result)) { return false; }
+    CREATE_CBUFFER(m_matrixBuffer, MatrixBufferType);
+    CREATE_CBUFFER(m_textureConfigBuffer, TextureConfigBufferType);
 
     // Step 5: Setup the sampler state description and then can be passed to the pixel shader after. ---------------------
     // The most important element of the texture sampler description is Filter. Filter will determine how it decides
@@ -247,36 +254,12 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // Setup the description of the light dynamic constant buffer that is in the pixel shader.
     // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
     if (useNormal) {
-        D3D11_BUFFER_DESC lightBufferDesc;
-        lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-        lightBufferDesc.ByteWidth = sizeof(LightBufferType);      // Check here that size is multiple of 16
-        assert((lightBufferDesc.ByteWidth % 16) == 0);
-        lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        lightBufferDesc.MiscFlags = 0;
-        lightBufferDesc.StructureByteStride = 0;
-
-        // Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-        result = device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer);
-        if (FAILED(result)) { return false; }
+        CREATE_CBUFFER(m_lightConfigBuffer, LightConfigBufferType);
+        CREATE_CBUFFER(m_lightBuffer, LightBufferType);
 
         // Setup the description of the camera dynamic constant buffer that is in the vertex shader use for specualr lighting calculations
-        if (useSpecular) {
-            D3D11_BUFFER_DESC cameraBufferDesc;
-            cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-            cameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
-            assert((cameraBufferDesc.ByteWidth % 16) == 0);
-            cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-            cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            cameraBufferDesc.MiscFlags = 0;
-            cameraBufferDesc.StructureByteStride = 0;
-
-            // Create the camera constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-            result = device->CreateBuffer(&cameraBufferDesc, NULL, &m_cameraBuffer);
-            if (FAILED(result)) { return false; }
-        }
+        if (useSpecular) { CREATE_CBUFFER(m_cameraBuffer, CameraBufferType); }
     }
-
 
     return true;
 }
@@ -287,6 +270,18 @@ void ShaderClass::ShutdownShader()
     if (m_cameraBuffer) {
         m_cameraBuffer->Release();
         m_cameraBuffer = 0;
+    }
+
+    // Release the textue config constant buffer.
+    if (m_textureConfigBuffer) {
+        m_textureConfigBuffer->Release();
+        m_textureConfigBuffer = 0;
+    }
+
+    // Release the light config constant buffer.
+    if (m_lightConfigBuffer) {
+        m_lightConfigBuffer->Release();
+        m_lightConfigBuffer = 0;
     }
 
     // Release the light constant buffer.
@@ -376,7 +371,6 @@ void ShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, 
     deviceContext->vs_or_ps_SetConstantBuffers_func(cbuff_num, 1, &cbuffer);\
 }
 
-
 // The SetShaderVariables function exists to make setting the global variables in the shader easier.
 // The matrices used in this function are created inside the ApplicationClass, after which this function is called
 // to send them from there into the vertex shader during the Render function call.
@@ -397,7 +391,7 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     viewMatrix = XMMatrixTranspose(viewMatrix);
     projectionMatrix = XMMatrixTranspose(projectionMatrix);
 
-    // Step 2: Copy updated metrics (constant buffers) for shader to use
+    // Step 2: Copy updated metrics (constant buffers) for VS shader to use
     MatrixBufferType* dataPtr;
     PRE_CBUFFER_UPDATE(m_matrixBuffer, MatrixBufferType, dataPtr);
     // Copy the matrices into the constant buffer.
@@ -407,12 +401,12 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     POST_CBUFFER_UPDATE(VSSetConstantBuffers, m_matrixBuffer, 0);
 
     if (useSpecularLight) {
-        // Update Camera paramaters (constant buffers) for shader to use
-        CameraBufferType* dataPtr2;
-        PRE_CBUFFER_UPDATE(m_cameraBuffer, CameraBufferType, dataPtr2);
+        // Update Camera paramaters (constant buffers) for PS shader to use
+        CameraBufferType* dataPtr;
+        PRE_CBUFFER_UPDATE(m_cameraBuffer, CameraBufferType, dataPtr);
         // Copy the camera position into the constant buffer.
-        dataPtr2->cameraPosition = cameraPosition;
-        dataPtr2->calcViewDirection = true;
+        dataPtr->cameraPosition = cameraPosition;
+        dataPtr->calcViewDirection = true;
         POST_CBUFFER_UPDATE(VSSetConstantBuffers, m_cameraBuffer, 1);
     }
 
@@ -420,6 +414,14 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     if ( texture != nullptr ) {
         useTexture = true;
         deviceContext->PSSetShaderResources(0, 1, &texture);
+
+        // Update Texture config paramaters (constant buffers) for PS shader to use
+        TextureConfigBufferType* dataPtr;
+        PRE_CBUFFER_UPDATE(m_textureConfigBuffer, TextureConfigBufferType, dataPtr);
+        // Copy the camera position into the constant buffer.
+        dataPtr->useTexture = true;
+        dataPtr->tmp = XMFLOAT3(1.0f, 1.0f, 1.0f);
+        POST_CBUFFER_UPDATE(PSSetConstantBuffers, m_textureConfigBuffer, 0);
     }
 
     // Step 4: Set up the light constant buffer is setup the same way as the matrix constant buffer.
@@ -427,23 +429,27 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     // Once the data is set, we unlock the buffer and then set it in the pixel shader.
     // Note that we use the PSSetConstantBuffers function instead of VSSetConstantBuffers since this is a pixel shader buffer we are setting.
     if (m_lightBuffer != nullptr ) {
-        // Update Lighting paramaters (constant buffers) for shader to use
-        LightBufferType* dataPtr3;
-        PRE_CBUFFER_UPDATE(m_lightBuffer, LightBufferType, dataPtr3);
+        // Update Lighting config paramaters (constant buffers) for PS shader to use
+        LightConfigBufferType* dataPtr;
+        PRE_CBUFFER_UPDATE(m_lightConfigBuffer, LightConfigBufferType, dataPtr);
+        // Copy the lighting configuration variables into the constant buffer.
+        dataPtr->useAmbientLight = useAmbientLight;
+        dataPtr->useDiffuseLight = useDiffuseLight;
+        dataPtr->useSpecularLight = useSpecularLight;
+        dataPtr->padding = 0.0f;
+        POST_CBUFFER_UPDATE(PSSetConstantBuffers, m_lightConfigBuffer, 1);
+
+        // Update Lighting paramaters (constant buffers) for PS shader to use
+        LightBufferType* dataPtr2;
+        PRE_CBUFFER_UPDATE(m_lightBuffer, LightBufferType, dataPtr2);
         // Copy the camera position into the constant buffer.
         // Copy the lighting variables into the constant buffer.
-        dataPtr3->ambientColor = ambientColor;
-        dataPtr3->diffuseColor = diffuseColor;
-        dataPtr3->lightDirection = lightDirection;
-        dataPtr3->specularColor = specularColor;
-        dataPtr3->specularPower = specularPower;
-
-        dataPtr3->useTexture = useTexture;
-        dataPtr3->useAmbientLight = useAmbientLight;
-        dataPtr3->useDiffuseLight = useDiffuseLight;
-        dataPtr3->useSpecularLight = useSpecularLight;
-        // dataPtr3->tmp = XMFLOAT3(0.0f, 0.0f, 0.0f);
-        POST_CBUFFER_UPDATE(PSSetConstantBuffers, m_lightBuffer, 0);
+        dataPtr2->ambientColor = ambientColor;
+        dataPtr2->diffuseColor = diffuseColor;
+        dataPtr2->lightDirection = lightDirection;
+        dataPtr2->specularColor = specularColor;
+        dataPtr2->specularPower = specularPower;
+        POST_CBUFFER_UPDATE(PSSetConstantBuffers, m_lightBuffer, 2);
     }
 
     return true;

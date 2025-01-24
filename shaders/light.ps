@@ -3,8 +3,22 @@
 Texture2D shaderTexture : register(t0);
 SamplerState SampleType : register(s0);
 
-// Two new global variables inside the LightBuffer that hold the diffuse color and the direction of the light.
-// These two variables will be set from values in the new LightClass object.
+// New global variables inside the LightBuffer that hold configuration, the diffuse color and the direction of the light.
+// These variables will be set from values in the LightClass object.
+cbuffer TextureConfig
+{
+    uint useTexture;
+    float3 tmp;
+};
+
+cbuffer LightConfig
+{
+    uint useAmbientLight;
+    uint useDiffuseLight;
+    uint useSpecularLight;
+    float padding;
+};
+
 cbuffer LightBuffer
 {
     float4 ambientColor;
@@ -12,12 +26,6 @@ cbuffer LightBuffer
     float3 lightDirection;
     float specularPower;
     float4 specularColor;
-
-    uint useTexture;
-    uint useAmbientLight;
-    uint useDiffuseLight;
-    uint useSpecularLight;
-    // float3 padding;
 };
 
 // TYPEDEFS
