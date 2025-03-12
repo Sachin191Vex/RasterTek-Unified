@@ -28,27 +28,30 @@ ShaderClass::~ShaderClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useNormal, bool useSpecular)
+bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular)
 {
     bool result;
     wchar_t* vsFilename, *psFilename;
     int error;
+    bool useLighting;
 
-    if (!useTexture && !useNormal) {
+    useLighting = useAmbient || useDiffuse || useSpecular;
+    if (!useLighting && !useTexture) {
         vsFilename = L"../shaders/color.vs";
         psFilename = L"../shaders/color.ps";
-    } else if (useTexture && !useNormal) {
+    } else if (!useLighting && useTexture) {
         vsFilename = L"../shaders/texture.vs";
         psFilename = L"../shaders/texture.ps";
-    } else if (useTexture && useNormal) {
+    } else if (useLighting && useTexture) {
         vsFilename = L"../shaders/light.vs";
         psFilename = L"../shaders/light.ps";
     } else {
+        // ToDo: support ligting shader with color and add command line options to override test lighting defaults
         return false;
     }
 
     // Initialize the vertex and pixel shaders.
-    result = InitializeShader(device, hwnd, vsFilename, psFilename, useTexture, useNormal, useSpecular);
+    result = InitializeShader(device, hwnd, vsFilename, psFilename, useTexture, useAmbient, useDiffuse, useSpecular);
     if(!result) { return false; }
 
     return true;
@@ -115,30 +118,33 @@ bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMM
     if (FAILED(result)) { return false; }\
 }
 
-bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal, bool useSpecular)
+bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular)
 {
     HRESULT result;
     ID3D10Blob* errorMessage;
     unsigned int numInputLayoutElements;
     char *vsShaderName, *psShaderName;
+    bool useLighting;
 
     // Initialize the pointers this function will use to null.
     errorMessage = nullptr;
 
     // Step 1: Compile shaders -------------------------------------------------------------------------------------------
-    if (!useTexture && !useNormal) {
+    useLighting = useAmbient || useDiffuse || useSpecular;
+    if (!useLighting && !useTexture) {
         vsShaderName = "ColorVertexShader";
         psShaderName = "ColorPixelShader";
         numInputLayoutElements = 2;
-    } else if (useTexture && !useNormal) {
+    } else if (!useLighting && useTexture) {
         vsShaderName = "TextureVertexShader";
         psShaderName = "TexturePixelShader";
         numInputLayoutElements = 2;
-    } else if (useTexture && useNormal) {
+    } else if (useLighting && useTexture) {
         vsShaderName = "LightVertexShader";
         psShaderName = "LightPixelShader";
         numInputLayoutElements = 3;
     } else {
+        // ToDo: support ligting shader with color and add command line options to override test lighting defaults
         return false;
     }
 
@@ -185,7 +191,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     polygonLayout[1].InstanceDataStepRate = 0;
 
-    if (useNormal) {
+    if (useDiffuse) {
         polygonLayout[2].SemanticName = "NORMAL";
         polygonLayout[2].SemanticIndex = 0;
         polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -253,7 +259,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // padding to make it 32.
     // Setup the description of the light dynamic constant buffer that is in the pixel shader.
     // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
-    if (useNormal) {
+    if (useDiffuse) {
         CREATE_CBUFFER(m_lightConfigBuffer, LightConfigBufferType);
         CREATE_CBUFFER(m_lightBuffer, LightBufferType);
 

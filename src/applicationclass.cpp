@@ -30,7 +30,8 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     char *modelFilename = nullptr;
     char *textureFilename = nullptr;
     bool useTexture = false;
-    bool useNormal = false;
+    bool useAmbient = true;
+    bool useDiffuse = false;
     bool useSpecular = false;
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
@@ -67,10 +68,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         strcpy(textureFilename, "../data/textures/stone01.tga");
         useTexture = true;
     }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) { useNormal = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) { useDiffuse = true; }
     if (CHECK_RT_TEST_NUM(10)) { useSpecular = true; }
 
-    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useNormal);
+    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useDiffuse);
     if (modelFilename != nullptr) { delete[] modelFilename; }
     if (textureFilename != nullptr) { delete[] textureFilename; }
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the model object.", "Error"); }
@@ -78,7 +79,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Create and initialize the shader object.
     m_Shader = new ShaderClass;
 
-    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd, useTexture, useNormal, useSpecular);
+    result = m_Shader->Initialize(m_Direct3D->GetDevice(), hwnd, useTexture, useAmbient, useDiffuse, useSpecular);
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the shader object.", "Error"); }
 
     // Create and initialize the light object.

@@ -53,7 +53,7 @@ public:
     ShaderClass(const ShaderClass&);
     ~ShaderClass();
 
-    bool Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useNormal, bool useSpecular);
+    bool Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular);
     void Shutdown();
     bool Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                 XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
@@ -63,7 +63,7 @@ public:
                 bool useSpecularLight, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower);
 
 private:
-    bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useNormal, bool useSpecular);
+    bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular);
     void ShutdownShader();
     void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
