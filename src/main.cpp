@@ -31,11 +31,13 @@ void RedirectIOToConsole() {
 }
 
 void displayHelp() {
+	std::wcout << L"Run from build directory to access to resources (..\\shaders, ..\\data\\models, ..\\data\\textures)\n";
 	std::wcout << L"Usage: [options]\n";
 	std::wcout << L"  -h or --help   Display this help message\n";
 	std::wcout << L"  --test <>      Test number to run (default=5)\n";
 	std::wcout << L"  --api <>       Specify api: API_DX11=1 (default), API_DX12=2, API_VK=3, API_OGL=3\n";
-	std::wcout << L"  --end<>        End test number to end (inclusive) (default=5)\n";
+	std::wcout << L"  --end <>       End test number to end (inclusive) (default=5)\n";
+	std::wcout << L"  --dir <>       Path to resources (default .) - not yet supported\n";
 }
 
 // Function to parse arguments
