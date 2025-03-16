@@ -24,8 +24,8 @@ bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCon
     bool result;
     bool useTexture, useModelFile;
 
-    useModelFile = (modelFilename != nullptr);
-    useTexture = (textureFilename != nullptr);
+    useModelFile = ((strcmp(modelFilename,"") != 0) ? true : false);
+    useTexture = ((strcmp(textureFilename, "") != 0) ? true : false);
 
     // Load in the model data.
     if (useModelFile) {

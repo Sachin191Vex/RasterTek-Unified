@@ -1,4 +1,8 @@
 // Filename: light.vs
+
+// DEFINES
+#define MAX_DIFFUSE_LIGHTS 4
+
 // GLOBALS
 cbuffer MatrixBuffer
 {
@@ -7,10 +11,18 @@ cbuffer MatrixBuffer
     matrix projectionMatrix;
 };
 
+cbuffer LightPositionBuffer
+{
+    float4 diffuseLightPosDir[MAX_DIFFUSE_LIGHTS];
+    unsigned int numDiffuseLights;
+    unsigned int isLightPos;
+    unsigned int padding[2];
+};
+
 cbuffer CameraBuffer
 {
     float3 cameraPosition;
-    uint calcViewDirection;
+    unsigned int calcViewDirection;
 };
 
 // TYPEDEFS
@@ -28,11 +40,13 @@ struct PixelInputType
     float2 tex : TEXCOORD0;
     float3 normal : NORMAL;
     float3 viewDirection : TEXCOORD1;
+    float3 diffuseLightDir[MAX_DIFFUSE_LIGHTS] : TEXCOORD2;
 };
 
 // Vertex Shader
 PixelInputType LightVertexShader(VertexInputType input)
 {
+    unsigned int i;
     PixelInputType output;
     float4 worldPosition;
 
@@ -57,13 +71,30 @@ PixelInputType LightVertexShader(VertexInputType input)
     // Normalize the normal vector.
     output.normal = normalize(output.normal);
 
+    // Calculate the position of the vertex in the world.
+    worldPosition = mul(input.position, worldMatrix);
+
+    // The position of all the lights in the world in relation to the vertex must be calculated, normalized
+    // final directions then sent into the pixel shader
+    // The direction of lights is specified then it can be used directly and sent to pixel shader
+    for (i=0; i<numDiffuseLights; i++) {
+        if (isLightPos) {
+            // Determine the light positions based on the position of the lights and the position of the vertex in the world.
+            output.diffuseLightDir[i] = diffuseLightPosDir[i].xyz - worldPosition.xyz;
+
+            // Normalize the light position vectors
+            output.diffuseLightDir[i] = normalize(output.diffuseLightDir[i]);
+        } else {
+            // Invert the light direction for calculations.
+            output.diffuseLightDir[i] = -diffuseLightPosDir[i].xyz;
+        }
+    }
+
+    // VideDirection calculations are needed if Specular lighting is used
     // The viewing direction is calculated here in the vertex shader. We calculate the world position of the vertex and
     // subtract that from the camera position to determine where we are viewing the scene from.
     // The final value is normalized and sent into the pixel shader.
     if (calcViewDirection) {
-        // Calculate the position of the vertex in the world.
-        worldPosition = mul(input.position, worldMatrix);
-
         // Determine the viewing direction based on the position of the camera and the position of the vertex in the world.
         output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
 

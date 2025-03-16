@@ -7,7 +7,8 @@ ApplicationClass::ApplicationClass()
     m_Camera = nullptr;
     m_Model = nullptr;
     m_Shader = nullptr;
-    m_Light = nullptr;
+    m_Lights = nullptr;
+    m_Lights = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass&)
@@ -27,12 +28,16 @@ ApplicationClass::~ApplicationClass()
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
     bool result;
-    char *modelFilename = nullptr;
-    char *textureFilename = nullptr;
+    char modelFilename[128];
+    char textureFilename[128];
     bool useTexture = false;
-    bool useAmbient = true;
+    bool useAmbient = false;
     bool useDiffuse = false;
     bool useSpecular = false;
+
+    // Initilize variable
+    strcpy(modelFilename, "");
+    strcpy(textureFilename, "");
 
     // Step 1: Create the direct3d object. -------------------------------------------------------------------------------
     m_Direct3D = new D3DClass();
@@ -49,31 +54,28 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
         // Move the camera back another 5 units so that we can see both cubes easily.
         m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
     }
+    if (CHECK_RT_TEST_NUM(11)) {
+        m_Camera->SetPosition(0.0f, 2.0f, -12.0f);
+    }
 
     // Step 3: Create and initialize the model object. -------------------------------------------------------------------
     // Set the file name of the model.
     m_Model = new ModelClass;
 
     // Set the name of the model and texture file that we will be loading.
-    if (CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) {
-        modelFilename = new char[128];
-        strcpy(modelFilename, "../data/models/cube.txt");
-    }
-    if (CHECK_RT_TEST_NUM(10)) {
-        modelFilename = new char[128];
-        strcpy(modelFilename, "../data/models/sphere.txt");
-    }
-    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
-        textureFilename = new char[128];
+    if (CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9)) { strcpy(modelFilename, "../data/models/cube.txt"); }
+    if (CHECK_RT_TEST_NUM(10)) { strcpy(modelFilename, "../data/models/sphere.txt"); }
+    if (CHECK_RT_TEST_NUM(11)) { strcpy(modelFilename, "../data/models/plane.txt"); }
+
+    if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) {
         strcpy(textureFilename, "../data/textures/stone01.tga");
         useTexture = true;
     }
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) { useDiffuse = true; }
-    if (CHECK_RT_TEST_NUM(10)) { useSpecular = true; }
+
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbient = true; useDiffuse = true; }
+    if (CHECK_RT_TEST_NUM(10)) { useAmbient = true;  useSpecular = true; }
 
     result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useDiffuse);
-    if (modelFilename != nullptr) { delete[] modelFilename; }
-    if (textureFilename != nullptr) { delete[] textureFilename; }
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the model object.", "Error"); }
 
     // Create and initialize the shader object.
@@ -84,20 +86,40 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
     // Create and initialize the light object.
     // The color of the light is set to white and the light direction is set to point down the positive Z axis.
-    m_Light = new LightClass;
+    m_numDiffuseLights = 1; m_isDiffuseLightPosGiven = false;
+    if (CHECK_RT_TEST_NUM(11)) { m_numDiffuseLights = 4; }
+
+    // Create and initialize the light objects array.
+    m_Lights = new LightClass[m_numDiffuseLights];
 
     if (CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
-        m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
+        m_Lights[0].SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
     }
-    m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-    m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+    m_Lights[0].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+    m_Lights[0].SetDirection(0.0f, 0.0f, 1.0f);
     if (CHECK_RT_TEST_NUM(9)) {
-        m_Light->SetDirection(1.0f, 0.0f, 0.0f);
+        m_Lights[0].SetDirection(1.0f, 0.0f, 0.0f);
     }
     if (CHECK_RT_TEST_NUM(10)) {
-        m_Light->SetDirection(1.0f, 0.0f, 1.0f);
-        m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-        m_Light->SetSpecularPower(32.0f);
+        m_Lights[0].SetDirection(1.0f, 0.0f, 1.0f);
+        m_Lights[0].SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Lights[0].SetSpecularPower(32.0f);
+    }
+    if (CHECK_RT_TEST_NUM(11)) {
+        m_isDiffuseLightPosGiven = true;
+
+        // Manually set the color and position of each light.
+        m_Lights[0].SetDiffuseColor(1.0f, 0.0f, 0.0f, 1.0f);  // Red
+        m_Lights[0].SetPosition(-3.0f, 1.0f, 3.0f);
+
+        m_Lights[1].SetDiffuseColor(0.0f, 1.0f, 0.0f, 1.0f);  // Green
+        m_Lights[1].SetPosition(3.0f, 1.0f, 3.0f);
+
+        m_Lights[2].SetDiffuseColor(0.0f, 0.0f, 1.0f, 1.0f);  // Blue
+        m_Lights[2].SetPosition(-3.0f, 1.0f, -3.0f);
+
+        m_Lights[3].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);  // White
+        m_Lights[3].SetPosition(3.0f, 1.0f, -3.0f);
     }
 
     return true;
@@ -106,9 +128,9 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 void ApplicationClass::Shutdown()
 {
     // Release the light object.
-    if (m_Light) {
-        delete m_Light;
-        m_Light = nullptr;
+    if (m_Lights) {
+        delete[] m_Lights;
+        m_Lights = nullptr;
     }
 
     // Release the color shader object.
@@ -188,6 +210,8 @@ bool ApplicationClass::Render(float rotation)
 {
     bool result;
     XMMATRIX worldMatrix, viewMatrix, projectionMatrix, rotateMatrix, translateMatrix, scaleMatrix, srMatrix;
+    XMFLOAT4 diffuseColor[MAX_DIFFUSE_LIGHTS];
+    XMFLOAT3 lightPosDir[MAX_DIFFUSE_LIGHTS];
 
     if (CHECK_RT_TEST_NUM(3) == true) {
         // Clear the buffers to begin the scene - gray
@@ -233,17 +257,33 @@ bool ApplicationClass::Render(float rotation)
 
     // 2-d: Render the model using the color shader.
     bool useAmbientLight = false;
-    bool useDiffuseLight = true;
+    bool useDiffuseLight = false;
     bool useSpecularLight = false;
-    if (CHECK_RT_TEST_NUM(9))  { useAmbientLight = true; }
-    if (CHECK_RT_TEST_NUM(10)) { useSpecularLight = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbientLight = true; useDiffuseLight = true; }
+    if (CHECK_RT_TEST_NUM(10)) { useAmbientLight = true;  useSpecularLight = true; }
+
+    // Get the light properties.
+    for (auto i=0; i<m_numDiffuseLights; i++) {
+        // Create the diffuse color array from the four light colors.
+        diffuseColor[i] = m_Lights[i].GetDiffuseColor();
+
+        if (m_isDiffuseLightPosGiven) {
+            // Create the light position array from the four light positions.
+            auto position = m_Lights[i].GetPosition();
+            lightPosDir[i].x = position.x;
+            lightPosDir[i].y = position.y;
+            lightPosDir[i].z = position.z;
+        } else {
+            lightPosDir[i] = m_Lights[i].GetDirection();
+        }
+    }
 
     ID3D11ShaderResourceView* texture = m_Model->GetTexture();
     result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, texture,
-                              m_Light->GetDirection(),
-                              useAmbientLight, m_Light->GetAmbientColor(),
-                              useDiffuseLight, m_Light->GetDiffuseColor(),
-                              useSpecularLight, m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+                              m_isDiffuseLightPosGiven, m_numDiffuseLights, lightPosDir,
+                              useAmbientLight, m_Lights->GetAmbientColor(),
+                              useDiffuseLight, diffuseColor,
+                              useSpecularLight, m_Camera->GetPosition(), m_Lights->GetSpecularColor(), m_Lights->GetSpecularPower());
     if (!result) { return false; }
 
     if (CHECK_RT_TEST_NUM(8)) {
@@ -262,10 +302,10 @@ bool ApplicationClass::Render(float rotation)
         // Render the model using the light shader.
         result = m_Shader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
                                   m_Model->GetTexture(),
-                                  m_Light->GetDirection(),
-                                  useAmbientLight, m_Light->GetAmbientColor(),
-                                  useDiffuseLight, m_Light->GetDiffuseColor(),
-                                  useSpecularLight, m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+                                  m_isDiffuseLightPosGiven, m_numDiffuseLights, lightPosDir,
+                                  useAmbientLight, m_Lights->GetAmbientColor(),
+                                  useDiffuseLight, diffuseColor,
+                                  useSpecularLight, m_Camera->GetPosition(), m_Lights->GetSpecularColor(), m_Lights->GetSpecularPower());
         if (!result) { return false; }
     }
 
