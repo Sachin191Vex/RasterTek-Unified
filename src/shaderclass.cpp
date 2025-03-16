@@ -432,7 +432,6 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
         dataPtr3->ambientColor = ambientCol;
         for (auto i=0; i<numDiffuseLights; i++) {
             dataPtr3->diffuseColor[i] = diffuseCol[i];
-            dataPtr3->diffuseLightPos[i] = lightPosDir[i];
         }
         dataPtr3->specularColor = specularCol;
         dataPtr3->specularPower = specularPow;

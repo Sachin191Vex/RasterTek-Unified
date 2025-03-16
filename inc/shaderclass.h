@@ -59,9 +59,6 @@ private:
         // Paramaters for diffuse light
         XMFLOAT4 diffuseColor[MAX_DIFFUSE_LIGHTS];
         float specularPower;
-
-        XMFLOAT3 diffuseLightPos[MAX_DIFFUSE_LIGHTS];
-
         float padding[3];                  // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
