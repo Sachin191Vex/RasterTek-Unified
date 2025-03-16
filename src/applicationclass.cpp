@@ -259,8 +259,9 @@ bool ApplicationClass::Render(float rotation)
     bool useAmbientLight = false;
     bool useDiffuseLight = false;
     bool useSpecularLight = false;
-    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbientLight = true; useDiffuseLight = true; }
-    if (CHECK_RT_TEST_NUM(10)) { useAmbientLight = true;  useSpecularLight = true; }
+    if (CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbientLight = true; }
+    if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useDiffuseLight = true; }
+    if (CHECK_RT_TEST_NUM(10)) { useSpecularLight = true; }
 
     // Get the light properties.
     for (auto i=0; i<m_numDiffuseLights; i++) {
