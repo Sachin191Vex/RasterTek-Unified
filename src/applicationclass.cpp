@@ -9,6 +9,8 @@ ApplicationClass::ApplicationClass()
     m_Shader = nullptr;
     m_Lights = nullptr;
     m_Lights = 0;
+    m_numDiffuseLights = 0;
+    m_isDiffuseLightPosGiven = false;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass&)
