@@ -88,7 +88,7 @@ void CameraClass::Render()
     lookAtVector = XMLoadFloat3(&lookAt);
 
     // Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians.
-    pitch = m_rotationX * 0.0174532925f;
+    pitch = m_rotationX * 0.0174532925f;  // 0.0174532925f = (XM_PI/180.0) just specify value to avoid calculation
     yaw = m_rotationY * 0.0174532925f;
     roll = m_rotationZ * 0.0174532925f;
 

@@ -346,7 +346,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     // We will need to keep a copy of this matrix so that we can pass it to our shaders that will be used to render our scenes.
     // Setup the projection matrix.
     float fieldOfView, screenAspect;
-    fieldOfView = 3.141592654f / 4.0f;
+    fieldOfView = XM_PIDIV4; //  Same as XM_PI / 4.0f; or 3.141592654f / 4.0f;
     screenAspect = (float)screenWidth / (float)screenHeight;
 
     // Create the projection matrix for 3D rendering.
