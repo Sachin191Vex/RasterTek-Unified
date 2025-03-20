@@ -149,15 +149,21 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
         return false;
     }
 
+#if _DEBUG
+    UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG;
+#else
+    UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS;
+#endif
+
     // Compile the vertex shader code.
     ID3D10Blob* vertexShaderBuffer = nullptr;
-    result = D3DCompileFromFile(vsFilename, NULL, NULL, vsShaderName, "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
+    result = D3DCompileFromFile(vsFilename, NULL, NULL, vsShaderName, "vs_5_0", compilerFlag1, 0,
                                 &vertexShaderBuffer, &errorMessage);
     CHECK_AND_RETURN_COMPILE_RESULT(result, vsFilename);
 
     // Compile the pixel shader code.
     ID3D10Blob* pixelShaderBuffer = nullptr;
-    result = D3DCompileFromFile(psFilename, NULL, NULL, psShaderName, "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
+    result = D3DCompileFromFile(psFilename, NULL, NULL, psShaderName, "ps_5_0", compilerFlag1, 0,
                                 &pixelShaderBuffer, &errorMessage);
     CHECK_AND_RETURN_COMPILE_RESULT(result, psFilename);
 
