@@ -55,9 +55,6 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     float4 light;
 
     float  lightIntensity[MAX_DIFFUSE_LIGHTS];
-    float4 colorArray[MAX_DIFFUSE_LIGHTS];
-    float4 colorSum;
-
     float3 reflection;
     float4 specular;
 
@@ -73,11 +70,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 
     // Do these calculation only if lighting is needed
     if ( useLighting ) {
-        if (useAmbientLight) {
-            // Initialize the specular color.
-            specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
-        }
-
+        light = float4(0.0f, 0.0f, 0.0f, 1.0f);
         if (useAmbientLight) {
             // Set the default output color to the ambient light value for all pixels.
             light = ambientColor;
@@ -87,42 +80,20 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
             // The light intensity for each of the point lights is calculated using the position
             // of the light and the normal vector. The amount of color contributed by each point light
             // is calculated from the intensity of the point light and the light color.
-            for(i=0; i<numDiffuseLights; i++) {
+            for (i=0; i<numDiffuseLights; i++) {
                 // Calculate the different amounts of light on this pixel based on the positions of the lights.
                 lightIntensity[i] = saturate(dot(input.normal, input.diffuseLightDir[i]));
-            }
 
-            if ( useDiffuseLight && !useSpecularLight ) {
-                for(i=0; i<numDiffuseLights; i++) {
-                    // Determine the diffuse color amount of each of the four lights.
-                    colorArray[i] = diffuseColor[i] * lightIntensity[i];
-                }
+                if (lightIntensity[i] > 0.0f) {
+                    // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
+                    light = saturate(light + diffuseColor[i] * lightIntensity[i]);
 
-                // Add all the four point lights together to get the final light color for this pixel.
-                // Initialize the sum of colors and Add all of the light colors up.
-                colorSum = float4(0.0f, 0.0f, 0.0f, 1.0f);
-                for(i=0; i<numDiffuseLights; i++) {
-                    colorSum.r += colorArray[i].r;
-                    colorSum.g += colorArray[i].g;
-                    colorSum.b += colorArray[i].b;
-                }
-                light = saturate(colorSum);
-            } else {
-                for (i=0; i<numDiffuseLights; i++) {
-                    if (lightIntensity[i] > 0.0f) {
-                        // Determine the final diffuse color based on the diffuse color and the amount of light intensity.
-                        light += (diffuseColor[i] * lightIntensity[i]);
+                    if (useSpecularLight) {
+                        // Calculate the reflection vector based on the light intensity, normal vector, and light direction.
+                        reflection = normalize(2.0f * lightIntensity[i] * input.normal - input.diffuseLightDir[i]);
 
-                        // Saturate the ambient and diffuse color.
-                        light = saturate(light);
-
-                        if (useSpecularLight) {
-                            // Calculate the reflection vector based on the light intensity, normal vector, and light direction.
-                            reflection = normalize(2.0f * lightIntensity[i] * input.normal - input.diffuseLightDir[i]);
-
-                            // Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
-                            specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
-                        }
+                        // Determine the amount of specular light based on the reflection vector, viewing direction, and specular power.
+                        specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
                     }
                 }
             }

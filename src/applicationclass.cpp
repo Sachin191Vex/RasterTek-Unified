@@ -94,7 +94,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Create and initialize the light objects array.
     m_Lights = new LightClass[m_numDiffuseLights];
 
-    if (CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10)) {
+    if (useAmbient) {
         m_Lights[0].SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
     }
     m_Lights[0].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
