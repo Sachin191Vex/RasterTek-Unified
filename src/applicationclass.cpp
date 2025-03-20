@@ -94,9 +94,13 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     // Create and initialize the light objects array.
     m_Lights = new LightClass[m_numDiffuseLights];
 
+    // Set Ambient light properties - color
+    m_Lights[0].SetAmbientColor(0.0f, 0.0f, 0.0f, 1.0f);
     if (useAmbient) {
         m_Lights[0].SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
     }
+
+    // Set Diffuse light properties - color, direction and/or posotion (for all lights used in a test)
     m_Lights[0].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
     m_Lights[0].SetDirection(0.0f, 0.0f, 1.0f);
     if (CHECK_RT_TEST_NUM(9)) {
@@ -104,8 +108,6 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     }
     if (CHECK_RT_TEST_NUM(10)) {
         m_Lights[0].SetDirection(1.0f, 0.0f, 1.0f);
-        m_Lights[0].SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-        m_Lights[0].SetSpecularPower(32.0f);
     }
     if (CHECK_RT_TEST_NUM(11)) {
         m_isDiffuseLightPosGiven = true;
@@ -122,6 +124,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
         m_Lights[3].SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);  // White
         m_Lights[3].SetPosition(3.0f, 1.0f, -3.0f);
+    }
+
+    // Set Ambient light properties - color, power
+    m_Lights[0].SetSpecularColor(0.0f, 0.0f, 0.0f, 1.0f);
+    m_Lights[0].SetSpecularPower(0.0f);
+    if (useSpecular) {
+        m_Lights[0].SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+        m_Lights[0].SetSpecularPower(32.0f);
     }
 
     return true;
