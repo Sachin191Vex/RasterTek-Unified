@@ -13,6 +13,16 @@ using namespace std;
 #define MAX_DIFFUSE_LIGHTS 4
 
 // Class name: ShaderClass
+enum ShaderType { SHADER_COLOR, SHADER_TEXURE, SHADER_LIGHT };
+typedef struct ShaderInfo {
+    ShaderType type;
+    WCHAR* vs_shader_file;
+    char* vs_shader_name;
+    WCHAR* ps_shader_file;
+    char* ps_shader_name;
+    unsigned int param_cnt;
+} ShaderInfo;
+
 class ShaderClass
 {
 private:
@@ -83,7 +93,11 @@ public:
                 bool useSpecular, XMFLOAT3 cameraPos, XMFLOAT4 specularCol, float specularPow);
 
 private:
-    bool InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular);
+    bool InitializeShader(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular);
+
+    bool SetShaderUsed(bool useTexture, bool useLighting);
+    ShaderInfo GetShaderUsed();
+
     void ShutdownShader();
     void OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename);
 
@@ -96,6 +110,8 @@ private:
     void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
 
 private:
+    ShaderInfo m_shader_info;
+
     ID3D11VertexShader* m_vertexShader;
     ID3D11PixelShader* m_pixelShader;
     ID3D11InputLayout* m_layout;

@@ -32,27 +32,13 @@ ShaderClass::~ShaderClass()
 bool ShaderClass::Initialize(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular)
 {
     bool result;
-    wchar_t* vsFilename, *psFilename;
-    int error;
-    bool useLighting;
 
-    useLighting = useAmbient || useDiffuse || useSpecular;
-    if (!useLighting && !useTexture) {
-        vsFilename = L"../shaders/color.vs";
-        psFilename = L"../shaders/color.ps";
-    } else if (!useLighting && useTexture) {
-        vsFilename = L"../shaders/texture.vs";
-        psFilename = L"../shaders/texture.ps";
-    } else if (useLighting && useTexture) {
-        vsFilename = L"../shaders/light.vs";
-        psFilename = L"../shaders/light.ps";
-    } else {
-        // ToDo: support ligting shader with color and add command line options to override test lighting defaults
-        return false;
-    }
+    auto useLighting = useAmbient || useDiffuse || useSpecular;
+    result = SetShaderUsed(useTexture, useLighting);
+    if (!result) { return false; }
 
     // Initialize the vertex and pixel shaders.
-    result = InitializeShader(device, hwnd, vsFilename, psFilename, useTexture, useAmbient, useDiffuse, useSpecular);
+    result = InitializeShader(device, hwnd, useTexture, useAmbient, useDiffuse, useSpecular);
     if(!result) { return false; }
 
     return true;
@@ -64,6 +50,48 @@ void ShaderClass::Shutdown()
     ShutdownShader();
 
     return;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+bool ShaderClass::SetShaderUsed(bool useTexture, bool useLighting)
+{
+    bool status = true;
+
+    if (!useTexture && !useLighting) {
+        m_shader_info.type = SHADER_COLOR;
+        m_shader_info.vs_shader_file = L"../shaders/color.vs";
+        m_shader_info.vs_shader_name = "ColorVertexShader";
+        m_shader_info.ps_shader_file = L"../shaders/color.ps";
+        m_shader_info.ps_shader_name = "ColorPixelShader";
+        m_shader_info.param_cnt = 2;
+    }
+    else if (useTexture && !useLighting) {
+        m_shader_info.type = SHADER_TEXURE;
+        m_shader_info.vs_shader_file = L"../shaders/texture.vs";
+        m_shader_info.vs_shader_name = "TextureVertexShader";
+        m_shader_info.ps_shader_file = L"../shaders/texture.ps";
+        m_shader_info.ps_shader_name = "TexturePixelShader";
+        m_shader_info.param_cnt = 2;
+    }
+    else if (useTexture && useLighting) {
+        m_shader_info.type = SHADER_LIGHT;
+        m_shader_info.vs_shader_file = L"../shaders/light.vs";
+        m_shader_info.vs_shader_name = "LightVertexShader";
+        m_shader_info.ps_shader_file = L"../shaders/light.ps";
+        m_shader_info.ps_shader_name = "LightPixelShader";
+        m_shader_info.param_cnt = 3;
+    }
+    else {
+        // ToDo: support ligting shader with color and add command line options to override test lighting defaults
+        status = false;
+    }
+
+    return(status);
+}
+
+ShaderInfo ShaderClass::GetShaderUsed()
+{
+    return m_shader_info;
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -96,7 +124,7 @@ bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMM
 #define CHECK_AND_RETURN_COMPILE_RESULT(result, filename) {\
     if (FAILED(result)) {\
         if (errorMessage) {\
-            OutputShaderErrorMessage(errorMessage, hwnd, vsFilename);\
+            OutputShaderErrorMessage(errorMessage, hwnd, filename);\
         } else {\
             char* tmp_char_name; WCHAR2CHAR(filename, tmp_char_name);\
             MessageBox(hwnd, tmp_char_name, "Missing Shader File", MB_OK);\
@@ -119,36 +147,18 @@ bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMM
     if (FAILED(result)) { return false; }\
 }
 
-bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular)
+bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular)
 {
     HRESULT result;
-    ID3D10Blob* errorMessage;
-    unsigned int numInputLayoutElements;
-    char *vsShaderName, *psShaderName;
-    bool useLighting;
+
+    // Initialize paramaters
+    auto useLighting = useAmbient || useDiffuse || useSpecular;
 
     // Initialize the pointers this function will use to null.
-    errorMessage = nullptr;
+    ID3D10Blob* errorMessage = nullptr;
 
     // Step 1: Compile shaders -------------------------------------------------------------------------------------------
-    useLighting = useAmbient || useDiffuse || useSpecular;
-    if (!useLighting && !useTexture) {
-        vsShaderName = "ColorVertexShader";
-        psShaderName = "ColorPixelShader";
-        numInputLayoutElements = 2;
-    } else if (!useLighting && useTexture) {
-        vsShaderName = "TextureVertexShader";
-        psShaderName = "TexturePixelShader";
-        numInputLayoutElements = 2;
-    } else if (useLighting && useTexture) {
-        vsShaderName = "LightVertexShader";
-        psShaderName = "LightPixelShader";
-        numInputLayoutElements = 3;
-    } else {
-        // ToDo: support ligting shader with color and add command line options to override test lighting defaults
-        return false;
-    }
-
+    auto shader_info = GetShaderUsed();
 #if _DEBUG
     UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG;
 #else
@@ -157,15 +167,15 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
 
     // Compile the vertex shader code.
     ID3D10Blob* vertexShaderBuffer = nullptr;
-    result = D3DCompileFromFile(vsFilename, NULL, NULL, vsShaderName, "vs_5_0", compilerFlag1, 0,
+    result = D3DCompileFromFile(shader_info.vs_shader_file, NULL, NULL, shader_info.vs_shader_name, "vs_5_0", compilerFlag1, 0,
                                 &vertexShaderBuffer, &errorMessage);
-    CHECK_AND_RETURN_COMPILE_RESULT(result, vsFilename);
+    CHECK_AND_RETURN_COMPILE_RESULT(result, shader_info.vs_shader_file);
 
     // Compile the pixel shader code.
     ID3D10Blob* pixelShaderBuffer = nullptr;
-    result = D3DCompileFromFile(psFilename, NULL, NULL, psShaderName, "ps_5_0", compilerFlag1, 0,
+    result = D3DCompileFromFile(shader_info.ps_shader_file, NULL, NULL, shader_info.ps_shader_name, "ps_5_0", compilerFlag1, 0,
                                 &pixelShaderBuffer, &errorMessage);
-    CHECK_AND_RETURN_COMPILE_RESULT(result, psFilename);
+    CHECK_AND_RETURN_COMPILE_RESULT(result, shader_info.ps_shader_file);
 
     // Step 2: Create shader objects/sblobs ------------------------------------------------------------------------------
     // Create the vertex shader from the buffer.
@@ -179,40 +189,55 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFil
     // Step 3: Define inputs to vertex shader ----------------------------------------------------------------------------
     // Create the vertex input layout description.
     // This setup needs to match the VertexType stucture in the ModelClass and in the shader.
-    D3D11_INPUT_ELEMENT_DESC *polygonLayout = new D3D11_INPUT_ELEMENT_DESC[numInputLayoutElements];
-    polygonLayout[0].SemanticName = "POSITION";
-    polygonLayout[0].SemanticIndex = 0;
-    polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    polygonLayout[0].InputSlot = 0;
-    polygonLayout[0].AlignedByteOffset = 0;
-    polygonLayout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    polygonLayout[0].InstanceDataStepRate = 0;
+    unsigned int param_num = 0;
+    D3D11_INPUT_ELEMENT_DESC* polygonLayout = new D3D11_INPUT_ELEMENT_DESC[shader_info.param_cnt];
+    polygonLayout[param_num].SemanticName = "POSITION";
+    polygonLayout[param_num].SemanticIndex = 0;
+    polygonLayout[param_num].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    polygonLayout[param_num].InputSlot = 0;
+    polygonLayout[param_num].AlignedByteOffset = 0;
+    polygonLayout[param_num].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+    polygonLayout[param_num].InstanceDataStepRate = 0;
+    param_num++;
 
-    polygonLayout[1].SemanticName = "COLOR";
-    if (useTexture) { polygonLayout[1].SemanticName = "TEXCOORD"; }
-    polygonLayout[1].SemanticIndex = 0;
-    polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    if (useTexture) { polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT; }
-    polygonLayout[1].InputSlot = 0;
-    polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-    polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    polygonLayout[1].InstanceDataStepRate = 0;
+    if ((shader_info.type == SHADER_COLOR)) {
+        polygonLayout[param_num].SemanticName = "COLOR";
+        polygonLayout[param_num].SemanticIndex = 0;
+        polygonLayout[param_num].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+        polygonLayout[param_num].InputSlot = 0;
+        polygonLayout[param_num].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+        polygonLayout[param_num].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+        polygonLayout[param_num].InstanceDataStepRate = 0;
+        param_num++;
+    }
 
-    if (useDiffuse) {
-        polygonLayout[2].SemanticName = "NORMAL";
-        polygonLayout[2].SemanticIndex = 0;
-        polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-        polygonLayout[2].InputSlot = 0;
-        polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-        polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-        polygonLayout[2].InstanceDataStepRate = 0;
+    if ((shader_info.type == SHADER_TEXURE) || (shader_info.type == SHADER_LIGHT)) {
+        polygonLayout[param_num].SemanticName = "TEXCOORD";
+        polygonLayout[param_num].SemanticIndex = 0;
+        polygonLayout[param_num].Format = DXGI_FORMAT_R32G32_FLOAT;
+        polygonLayout[param_num].InputSlot = 0;
+        polygonLayout[param_num].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+        polygonLayout[param_num].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+        polygonLayout[param_num].InstanceDataStepRate = 0;
+        param_num++;
+    }
+
+    if (shader_info.type == SHADER_LIGHT) {
+        polygonLayout[param_num].SemanticName = "NORMAL";
+        polygonLayout[param_num].SemanticIndex = 0;
+        polygonLayout[param_num].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+        polygonLayout[param_num].InputSlot = 0;
+        polygonLayout[param_num].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+        polygonLayout[param_num].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+        polygonLayout[param_num].InstanceDataStepRate = 0;
+        param_num++;
     }
 
     // Get a count of the elements in the layout.
     // numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
     // Create the vertex input layout.
-    result = device->CreateInputLayout(polygonLayout, numInputLayoutElements, vertexShaderBuffer->GetBufferPointer(),
+    result = device->CreateInputLayout(polygonLayout, shader_info.param_cnt, vertexShaderBuffer->GetBufferPointer(),
                                        vertexShaderBuffer->GetBufferSize(), &m_layout);
     delete[] polygonLayout;
     if (FAILED(result)) { return false; }
