@@ -154,14 +154,17 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, bool useTexture, bool u
             // The normal is a line that is perpendicular to the face of the polygon so that the exact direction the face is pointing can be calculated.
             // For simplicity purposes I set the normal for each vertex along the Z axis by setting each Z component to -1.0f which makes the normal point towards the viewer.
             verticesTextureLight[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+            verticesTextureLight[0].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f); // Red vertex
             verticesTextureLight[0].texture = XMFLOAT2(0.0f, 1.0f);
             verticesTextureLight[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-            verticesTextureLight[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+            verticesTextureLight[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);    // Top middle.
+            verticesTextureLight[1].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f); // Red vertex
             verticesTextureLight[1].texture = XMFLOAT2(0.5f, 0.0f);
             verticesTextureLight[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-            verticesTextureLight[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+            verticesTextureLight[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);   // Bottom right.
+            verticesTextureLight[2].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f); // Red vertex
             verticesTextureLight[2].texture = XMFLOAT2(1.0f, 1.0f);
             verticesTextureLight[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
         } else {
@@ -181,6 +184,7 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, bool useTexture, bool u
         // Load the vertex array and index array with data.
         for (int i = 0; i < m_vertexCount; i++) {
             verticesTextureLight[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+            verticesTextureLight[i].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);       // Red vertex
             verticesTextureLight[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
             verticesTextureLight[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
 

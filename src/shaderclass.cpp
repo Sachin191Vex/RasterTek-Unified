@@ -79,7 +79,7 @@ bool ShaderClass::SetShaderUsed(bool useTexture, bool useLighting)
         m_shader_info.vs_shader_name = "LightVertexShader";
         m_shader_info.ps_shader_file = L"../shaders/light.ps";
         m_shader_info.ps_shader_name = "LightPixelShader";
-        m_shader_info.param_cnt = 3;
+        m_shader_info.param_cnt = 4;
     }
     else {
         // ToDo: support ligting shader with color and add command line options to override test lighting defaults
@@ -200,7 +200,7 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, bool useText
     polygonLayout[param_num].InstanceDataStepRate = 0;
     param_num++;
 
-    if ((shader_info.type == SHADER_COLOR)) {
+    if ((shader_info.type == SHADER_COLOR) || (shader_info.type == SHADER_LIGHT)) {
         polygonLayout[param_num].SemanticName = "COLOR";
         polygonLayout[param_num].SemanticIndex = 0;
         polygonLayout[param_num].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;

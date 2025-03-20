@@ -30,6 +30,7 @@ private:
     struct VertexTypeTextureLight
     {
         XMFLOAT3 position;
+        XMFLOAT4 color;
         XMFLOAT2 texture;
         XMFLOAT3 normal;
     };
