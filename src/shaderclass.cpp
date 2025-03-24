@@ -160,7 +160,8 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, bool useText
     // Step 1: Compile shaders -------------------------------------------------------------------------------------------
     auto shader_info = GetShaderUsed();
 #if _DEBUG
-    UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG;
+    // UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG;  // To debug using Visual Studio Graphics Debug
+    UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG | D3D10_SHADER_SKIP_OPTIMIZATION;  // To debug using RenderDoc
 #else
     UINT compilerFlag1 = D3D10_SHADER_ENABLE_STRICTNESS;
 #endif
