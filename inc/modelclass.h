@@ -12,9 +12,12 @@ using namespace DirectX;
 using namespace std;
 
 // Class name: ModelClass
+
+enum CraftModel {TRI_RED, TRI_REDINC, TRI_FULLCOL};
 class ModelClass
 {
 private:
+    // P=Position, C=Color, T=Texture, N=Normal
     struct VertexTypeColor
     {
         XMFLOAT3 position;
@@ -35,7 +38,7 @@ private:
         XMFLOAT3 normal;
     };
 
-    struct ModelType
+    struct ModelParamType
     {
         float x, y, z;
         float tu, tv;
@@ -46,7 +49,7 @@ public:
     ModelClass(const ModelClass&);
     ~ModelClass();
 
-    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename, bool useNormal);
+    bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, CraftModel crafModel, char* modelFilename, char* textureFilename, bool useNormal);
     void Shutdown();
     void Render(ID3D11DeviceContext* deviceContext);
 
@@ -57,7 +60,7 @@ public:
     void ReleaseModel();
 
 private:
-    bool InitializeBuffers(ID3D11Device* device, bool useTexture, bool useNormal, bool useModelFile);
+    bool InitializeBuffers(ID3D11Device* device, CraftModel crafModel, bool useTexture, bool useNormal, bool useModelFile);
     void ShutdownBuffers();
     void RenderBuffers(ID3D11DeviceContext* deviceContext);
     bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename);
@@ -71,7 +74,7 @@ private:
     int m_vertexCount, m_indexCount;
     TextureClass* m_Texture;
 
-    ModelType* m_model;
+    ModelParamType* m_model;
     unsigned int m_vertexBufferStride;
 };
 

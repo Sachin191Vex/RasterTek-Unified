@@ -19,7 +19,7 @@ ModelClass::~ModelClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename, bool useNormal)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, CraftModel craftModel, char* modelFilename, char* textureFilename, bool useNormal)
 {
     bool result;
     bool useTexture, useModelFile;
@@ -34,7 +34,7 @@ bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCon
     }
 
     // Initialize the vertex and index buffers.
-    result = InitializeBuffers(device, useTexture, useNormal, useModelFile);
+    result = InitializeBuffers(device, craftModel, useTexture, useNormal, useModelFile);
     if (!result) { return false; }
 
     // Load the texture for this model.
@@ -60,6 +60,7 @@ void ModelClass::Shutdown()
     return;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 // This function to put the vertex and index buffers on the graphics pipeline so the color shader will be able to render them.
 void ModelClass::Render(ID3D11DeviceContext* deviceContext)
 {
@@ -82,7 +83,7 @@ ID3D11ShaderResourceView* ModelClass::GetTexture()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-bool ModelClass::InitializeBuffers(ID3D11Device* device, bool useTexture, bool useNormal, bool useModelFile)
+bool ModelClass::InitializeBuffers(ID3D11Device* device, CraftModel crafModel, bool useTexture, bool useNormal, bool useModelFile)
 {
     VertexTypeColor* verticesColor;
     VertexTypeTexture* verticesTexture;
@@ -127,9 +128,14 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device, bool useTexture, bool u
 
             verticesColor[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
             verticesColor[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+            if (crafModel == TRI_RED) { verticesColor[1].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f); }
+            if (crafModel == TRI_REDINC) { verticesColor[1].color = XMFLOAT4(0.3f, 0.0f, 0.0f, 1.0f); }
+
 
             verticesColor[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
             verticesColor[2].color = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+            if (crafModel == TRI_RED) { verticesColor[2].color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f); }
+            if (crafModel == TRI_REDINC) { verticesColor[2].color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f); }
         } else if (useTexture && !useNormal) {
             // Create the vertex array.
             stride = sizeof(VertexTypeTexture);
@@ -304,7 +310,7 @@ void ModelClass::ReleaseTexture()
 
 // --------------------------------------------------------------------------------------------------------------------
 // LoadModel function which handles loading the model data from the text file into the m_model array variable.
-// It opens the text file and reads in the vertex count first. After reading the vertex count it creates the ModelType
+// It opens the text file and reads in the vertex count first. After reading the vertex count it creates the ModelParamType
 // array and then reads each line into the array.Both the vertex count and index count are now set in this function.
 bool ModelClass::LoadModel(char* filename)
 {
@@ -329,7 +335,7 @@ bool ModelClass::LoadModel(char* filename)
     m_indexCount = m_vertexCount;
 
     // Create the model using the vertex count that was read in.
-    m_model = new ModelType[m_vertexCount];
+    m_model = new ModelParamType[m_vertexCount];
 
     // Read up to the beginning of the data.
     fin.get(input);

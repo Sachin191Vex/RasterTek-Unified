@@ -77,7 +77,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbient = true; useDiffuse = true; }
     if (CHECK_RT_TEST_NUM(10)) { useAmbient = true;  useSpecular = true; }
 
-    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), modelFilename, textureFilename, useDiffuse);
+    CraftModel craftModel = TRI_FULLCOL;
+    if (CHECK_RT_TEST_NUM(1)) { craftModel = TRI_RED; }
+    if (CHECK_RT_TEST_NUM(2)) { craftModel = TRI_REDINC; }
+    result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), craftModel, modelFilename, textureFilename, useDiffuse);
     if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the model object.", "Error"); }
 
     // Create and initialize the shader object.
