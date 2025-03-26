@@ -9,32 +9,38 @@ SamplerState SampleType : register(s0);
 
 // New global variables inside the LightBuffer that hold configuration, the diffuse color and the direction of the light.
 // These variables will be set from values in the LightClass object.
-cbuffer TextureConfig
+cbuffer TextureConfigBuffer
 {
     uint useTexture;
-    float3 tmp;
+    float3 paddingTCB;
 };
 
-cbuffer LightConfig
+cbuffer LightConfigBuffer
 {
     uint useAmbientLight;
     uint useDiffuseLight;
     uint useSpecularLight;
-    uint numDiffuseLights;
+    float paddingLCB;
 };
 
-cbuffer LightParamBuffer
+cbuffer LightDiffuseParamBuffer
+{
+    float4 diffuseLightPosDir[MAX_DIFFUSE_LIGHTS];
+    float4 diffuseColor[MAX_DIFFUSE_LIGHTS];
+    unsigned int numDiffuseLights;
+    unsigned int isDiffuseLightPos;
+    float2 paddingLDB;
+};
+
+cbuffer LightAmbientSpecularParamBuffer
 {
     // Paramaters for ambient light
     float4 ambientColor;
 
     // Paramaters for specular light
     float4 specularColor;
-
-    // Paramaters for diffuse light
-    float4 diffuseColor[MAX_DIFFUSE_LIGHTS];
     float specularPower;
-    float padding[3];
+    float3 paddingLPB;
 };
 
 // TYPEDEFS

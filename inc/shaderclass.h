@@ -38,7 +38,7 @@ private:
     struct TextureConfigBufferType
     {
         unsigned int useTexture;
-        XMFLOAT3 tmp;                  // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+        XMFLOAT3 paddingTCB;           // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
     struct LightConfigBufferType
@@ -46,30 +46,27 @@ private:
         unsigned int useAmbientLight;
         unsigned int useDiffuseLight;
         unsigned int useSpecularLight;
-        unsigned int numDiffuseLights;
-        // float padding;              // No padding needed
+        float paddingLCB;             // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
-    struct LightPosBufferType
+    struct LightDiffuseParamBufferType
     {
         XMFLOAT4 diffuseLightPosDir[MAX_DIFFUSE_LIGHTS];
+        XMFLOAT4 diffuseColor[MAX_DIFFUSE_LIGHTS];
         unsigned int numDiffuseLights;
-        unsigned int isLightPos;
-        unsigned int padding[2];
+        unsigned int isDiffuseLightPos;
+        XMFLOAT2 paddingLDB;          // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
-    struct LightParamBufferType
+    struct LightAmbientSpecularParamBufferType
     {
         // Paramaters for ambient light
         XMFLOAT4 ambientColor;
 
         // Paramaters for specular light
         XMFLOAT4 specularColor;
-
-        // Paramaters for diffuse light
-        XMFLOAT4 diffuseColor[MAX_DIFFUSE_LIGHTS];
         float specularPower;
-        float padding[3];                  // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
+        XMFLOAT3 paddingLPB;          // Extra padding so structure is a multiple of 16 for CreateBuffer function requirements.
     };
 
     struct CameraBufferType
@@ -120,8 +117,8 @@ private:
     ID3D11Buffer* m_matrixBuffer;
     ID3D11Buffer* m_textureConfigBuffer;
     ID3D11Buffer* m_lightConfigBuffer;
-    ID3D11Buffer* m_lightPosBuffer;
-    ID3D11Buffer* m_lightParamBuffer;
+    ID3D11Buffer* m_lightDiffuseParamBuffer;
+    ID3D11Buffer* m_lightAmbientSpecularParamBuffer;
     ID3D11Buffer* m_cameraBuffer;
 };
 

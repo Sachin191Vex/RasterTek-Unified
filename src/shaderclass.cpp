@@ -15,8 +15,8 @@ ShaderClass::ShaderClass()
     m_matrixBuffer = nullptr;
     m_textureConfigBuffer = nullptr;
     m_lightConfigBuffer = nullptr;
-    m_lightPosBuffer = nullptr;
-    m_lightParamBuffer = nullptr;
+    m_lightDiffuseParamBuffer = nullptr;
+    m_lightAmbientSpecularParamBuffer = nullptr;
     m_cameraBuffer = nullptr;
 }
 
@@ -294,8 +294,8 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, bool useText
     // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
     if (useLighting) {
         CREATE_CBUFFER(m_lightConfigBuffer, LightConfigBufferType);
-        CREATE_CBUFFER(m_lightPosBuffer, LightPosBufferType);
-        CREATE_CBUFFER(m_lightParamBuffer, LightParamBufferType);
+        CREATE_CBUFFER(m_lightDiffuseParamBuffer, LightDiffuseParamBufferType);
+        CREATE_CBUFFER(m_lightAmbientSpecularParamBuffer, LightAmbientSpecularParamBufferType);
 
         // Setup the description of the camera dynamic constant buffer that is in the vertex shader use for specualr lighting calculations
         if (useSpecular) { CREATE_CBUFFER(m_cameraBuffer, CameraBufferType); }
@@ -316,8 +316,8 @@ void ShaderClass::ShutdownShader()
     // Release the created constant buffers.
     RELEASE_ID3D11_PTR(m_cameraBuffer);
 
-    RELEASE_ID3D11_PTR(m_lightParamBuffer);
-    RELEASE_ID3D11_PTR(m_lightPosBuffer);
+    RELEASE_ID3D11_PTR(m_lightAmbientSpecularParamBuffer);
+    RELEASE_ID3D11_PTR(m_lightDiffuseParamBuffer);
     RELEASE_ID3D11_PTR(m_lightConfigBuffer);
 
     RELEASE_ID3D11_PTR(m_textureConfigBuffer);
@@ -425,7 +425,7 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
         PRE_CBUFFER_UPDATE(m_textureConfigBuffer, TextureConfigBufferType, dataPtr);
         // Copy the camera position into the constant buffer.
         dataPtr->useTexture = true;
-        dataPtr->tmp = XMFLOAT3(1.0f, 1.0f, 1.0f);
+        dataPtr->paddingTCB = XMFLOAT3(0.0f, 0.0f, 0.0f);
         POST_CBUFFER_UPDATE(m_textureConfigBuffer, PSSetConstantBuffers, PS_bufferNum);
     }
 
@@ -434,17 +434,18 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
     // Once the data is set, we unlock the buffer and then set it in the pixel shader.
     // Note that we use the PSSetConstantBuffers function instead of VSSetConstantBuffers since this is a pixel shader buffer we are setting.
     if (useLighting) {
-        // Update Lighting direction paramaters (constant buffers) for VS shader to use
-        LightPosBufferType* dataPtr;
-        PRE_CBUFFER_UPDATE(m_lightPosBuffer, LightPosBufferType, dataPtr);
+        // Update Diffsue lighting paramaters (constant buffers) for VS shader to use
+        LightDiffuseParamBufferType* dataPtr;
+        PRE_CBUFFER_UPDATE(m_lightDiffuseParamBuffer, LightDiffuseParamBufferType, dataPtr);
         dataPtr->numDiffuseLights = numDiffuseLights;
-        dataPtr->isLightPos = isLightPos;
+        dataPtr->isDiffuseLightPos = isLightPos;
         for (auto i=0; i<numDiffuseLights; i++) {
             dataPtr->diffuseLightPosDir[i].x = lightPosDir[i].x;
             dataPtr->diffuseLightPosDir[i].y = lightPosDir[i].y;
             dataPtr->diffuseLightPosDir[i].z = lightPosDir[i].z;
+            dataPtr->diffuseColor[i] = diffuseCol[i];
         }
-        POST_CBUFFER_UPDATE(m_lightPosBuffer, VSSetConstantBuffers, VS_bufferNum);
+        POST_CBUFFER_UPDATE(m_lightDiffuseParamBuffer, VSSetConstantBuffers, VS_bufferNum);
 
         // Update Lighting config paramaters (constant buffers) for PS shader to use
         LightConfigBufferType* dataPtr2;
@@ -453,21 +454,21 @@ bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATR
         dataPtr2->useAmbientLight = useAmbient;
         dataPtr2->useDiffuseLight = useDiffuse;
         dataPtr2->useSpecularLight = useSpecular;
-        dataPtr2->numDiffuseLights = numDiffuseLights;
         POST_CBUFFER_UPDATE(m_lightConfigBuffer, PSSetConstantBuffers, PS_bufferNum);
 
+        // Update diffuse lighting paramaters (constant buffers) for PS shader to use
+        PRE_CBUFFER_UPDATE(m_lightDiffuseParamBuffer, LightDiffuseParamBufferType, dataPtr);
+        POST_CBUFFER_UPDATE(m_lightDiffuseParamBuffer, PSSetConstantBuffers, PS_bufferNum);
+
         // Update Lighting paramaters (constant buffers) for PS shader to use
-        LightParamBufferType* dataPtr3;
-        PRE_CBUFFER_UPDATE(m_lightParamBuffer, LightParamBufferType, dataPtr3);
+        LightAmbientSpecularParamBufferType* dataPtr3;
+        PRE_CBUFFER_UPDATE(m_lightAmbientSpecularParamBuffer, LightAmbientSpecularParamBufferType, dataPtr3);
         // Copy the camera position into the constant buffer.
         // Copy the lighting variables into the constant buffer.
         dataPtr3->ambientColor = ambientCol;
-        for (auto i=0; i<numDiffuseLights; i++) {
-            dataPtr3->diffuseColor[i] = diffuseCol[i];
-        }
         dataPtr3->specularColor = specularCol;
         dataPtr3->specularPower = specularPow;
-        POST_CBUFFER_UPDATE(m_lightParamBuffer, PSSetConstantBuffers, PS_bufferNum);
+        POST_CBUFFER_UPDATE(m_lightAmbientSpecularParamBuffer, PSSetConstantBuffers, PS_bufferNum);
 
         if (useSpecular) {
             // Update Camera paramaters (constant buffers) for PS shader to use

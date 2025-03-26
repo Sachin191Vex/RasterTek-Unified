@@ -11,12 +11,13 @@ cbuffer MatrixBuffer
     matrix projectionMatrix;
 };
 
-cbuffer LightPositionBuffer
+cbuffer LightDiffuseParamBuffer
 {
     float4 diffuseLightPosDir[MAX_DIFFUSE_LIGHTS];
+    float4 diffuseColor[MAX_DIFFUSE_LIGHTS];
     unsigned int numDiffuseLights;
-    unsigned int isLightPos;
-    unsigned int padding[2];
+    unsigned int isDiffuseLightPos;
+    float2 paddingLDB;
 };
 
 cbuffer CameraBuffer
@@ -83,7 +84,7 @@ PixelInputType LightVertexShader(VertexInputType input)
     // final directions then sent into the pixel shader
     // The direction of lights is specified then it can be used directly and sent to pixel shader
     for (i=0; i<numDiffuseLights; i++) {
-        if (isLightPos) {
+        if (isDiffuseLightPos) {
             // Determine the light positions based on the position of the lights and the position of the vertex in the world.
             output.diffuseLightDir[i] = diffuseLightPosDir[i].xyz - worldPosition.xyz;
 
