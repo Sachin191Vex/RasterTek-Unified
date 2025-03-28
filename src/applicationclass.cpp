@@ -161,18 +161,14 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     return true;
 }
 
-#define RELEASE_APP_OBJ(obj)  { if (obj) {delete obj; obj = nullptr;} }
-#define SHUTDOWN_APP_OBJ(obj) { if (obj) { obj->Shutdown(); delete obj; obj = nullptr;} }
-#define RELEASE_APP_OBJ_ARR(arr) { if (arr) { delete[] arr; arr = nullptr;} }
-
 void ApplicationClass::Shutdown()
 {
-    RELEASE_APP_OBJ_ARR(m_Lights);
-    SHUTDOWN_APP_OBJ(m_Bitmap);
-    SHUTDOWN_APP_OBJ(m_Shader);
-    SHUTDOWN_APP_OBJ(m_Model);
-    RELEASE_APP_OBJ(m_Lights);
-    SHUTDOWN_APP_OBJ(m_Direct3D);
+    RT_RELEASE_OBJ_PTR_ARR(m_Lights);
+    RT_SHUTDOWN_OBJ_PTR(m_Bitmap);
+    RT_SHUTDOWN_OBJ_PTR(m_Shader);
+    RT_SHUTDOWN_OBJ_PTR(m_Model);
+    RT_RELEASE_OBJ_PTR(m_Lights);
+    RT_SHUTDOWN_OBJ_PTR(m_Direct3D);
 
     return;
 }

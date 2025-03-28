@@ -18,10 +18,10 @@ typedef enum { API_DX11 = 1, API_DX12 = 2, API_VK = 3, API_OGL = 3 } RTApi;
 typedef unsigned char uchar;
 
 struct RTUserArgs {
-	RTApi api = API_DX11;
-	uchar test = 5;
-	uchar end = 5;
-	uchar mod = 1;
+    RTApi api = API_DX11;
+    uchar test = 5;
+    uchar end = 5;
+    uchar mod = 1;
 };
 
 extern RTUserArgs RTArgs;
@@ -31,7 +31,12 @@ extern RTUserArgs RTArgs;
 #define CHECK_RT_API(test_api) ( (test_api == RTArgs.api) ? true: false )
 
 #define WCHAR2CHAR(var_wchar_ptr, var_char_ptr) {\
-	int size = WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, NULL, 0, NULL, NULL);\
-	var_char_ptr = new char[size];\
-	WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, var_char_ptr, size, NULL, NULL);\
+    int size = WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, NULL, 0, NULL, NULL);\
+    var_char_ptr = new char[size];\
+    WideCharToMultiByte(CP_UTF8, 0, var_wchar_ptr, -1, var_char_ptr, size, NULL, NULL);\
 }
+
+#define RT_RELEASE_OBJ_PTR(obj)  { if (obj) {delete obj; obj = nullptr;} }
+#define RT_SHUTDOWN_OBJ_PTR(obj) { if (obj) { obj->Shutdown(); delete obj; obj = nullptr;} }
+#define RT_RELEASE_ID3D11_PTR(ID3D11_ptr) { if (ID3D11_ptr) { ID3D11_ptr->Release(); ID3D11_ptr = nullptr;} }
+#define RT_RELEASE_OBJ_PTR_ARR(arr) { if (arr) { delete[] arr; arr = nullptr;} }

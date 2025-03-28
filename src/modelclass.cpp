@@ -298,12 +298,7 @@ bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceCo
 // The ReleaseTexture function will release the texture object that was created and loaded during the LoadTexture function.
 void ModelClass::ReleaseTexture()
 {
-    // Release the texture object.
-    if (m_Texture) {
-        m_Texture->Shutdown();
-        delete m_Texture;
-        m_Texture = nullptr;
-    }
+    RT_SHUTDOWN_OBJ_PTR(m_Texture);
 
     return;
 }

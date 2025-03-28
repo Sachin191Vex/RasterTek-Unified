@@ -307,13 +307,7 @@ bool BitmapClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceC
 
 void BitmapClass::ReleaseTexture()
 {
-    // Release the texture object.
-    if(m_Texture) {
-        m_Texture->Shutdown();
-        delete m_Texture;
-        m_Texture = 0;
-    }
-
+    RT_SHUTDOWN_OBJ_PTR(m_Texture);
     return;
 }
 

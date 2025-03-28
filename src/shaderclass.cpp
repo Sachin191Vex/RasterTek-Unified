@@ -306,30 +306,23 @@ bool ShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, bool useText
     return true;
 }
 
-#define RELEASE_ID3D11_PTR(ID3D11_ptr) {\
-    if (ID3D11_ptr) {\
-        ID3D11_ptr->Release();\
-        ID3D11_ptr = nullptr;\
-    }\
-}
-
 void ShaderClass::ShutdownShader()
 {
     // Release the created constant buffers.
-    RELEASE_ID3D11_PTR(m_cameraBuffer);
+    RT_RELEASE_ID3D11_PTR(m_cameraBuffer);
 
-    RELEASE_ID3D11_PTR(m_lightAmbientSpecularParamBuffer);
-    RELEASE_ID3D11_PTR(m_lightDiffuseParamBuffer);
-    RELEASE_ID3D11_PTR(m_lightConfigBuffer);
+    RT_RELEASE_ID3D11_PTR(m_lightAmbientSpecularParamBuffer);
+    RT_RELEASE_ID3D11_PTR(m_lightDiffuseParamBuffer);
+    RT_RELEASE_ID3D11_PTR(m_lightConfigBuffer);
 
-    RELEASE_ID3D11_PTR(m_textureConfigBuffer);
-    RELEASE_ID3D11_PTR(m_matrixBuffer);
+    RT_RELEASE_ID3D11_PTR(m_textureConfigBuffer);
+    RT_RELEASE_ID3D11_PTR(m_matrixBuffer);
 
     // Release the created sampler state, input layout and shader buffers
-    RELEASE_ID3D11_PTR(m_sampleState);
-    RELEASE_ID3D11_PTR(m_layout);
-    RELEASE_ID3D11_PTR(m_pixelShader);
-    RELEASE_ID3D11_PTR(m_vertexShader);
+    RT_RELEASE_ID3D11_PTR(m_sampleState);
+    RT_RELEASE_ID3D11_PTR(m_layout);
+    RT_RELEASE_ID3D11_PTR(m_pixelShader);
+    RT_RELEASE_ID3D11_PTR(m_vertexShader);
 
     return;
 }
