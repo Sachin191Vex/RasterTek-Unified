@@ -354,10 +354,7 @@ bool ModelClass::LoadModel(char* filename)
 // The ReleaseModel function handles deleting the model data array.
 void ModelClass::ReleaseModel()
 {
-    if (m_model) {
-        delete[] m_model;
-        m_model = nullptr;
-    }
+    RT_RELEASE_OBJ_PTR_ARR(m_model);
 
     return;
 }
