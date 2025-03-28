@@ -210,7 +210,7 @@ bool SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 		// Set the position of the window to the top left corner.
 		posX = posY = 0;
 	} else {
-		// If windowed then set it to 800x600 resolution.
+		// If windowed then set it to 800x600/1024x768/1280x800 resolution.
 		screenWidth = 800;
 		screenHeight = 600;
 
