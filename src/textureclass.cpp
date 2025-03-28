@@ -90,24 +90,9 @@ bool TextureClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 
 void TextureClass::Shutdown()
 {
-    // Release the texture view resource.
-    if(m_textureView) {
-        m_textureView->Release();
-        m_textureView = nullptr;
-    }
-
-    // Release the texture.
-    if(m_texture) {
-        m_texture->Release();
-        m_texture = nullptr;
-    }
-
-    // Release the targa data.
-    if(m_targaData) {
-        delete [] m_targaData;
-        m_targaData = nullptr;
-    }
-
+    RT_RELEASE_ID3D11_PTR(m_textureView);
+    RT_RELEASE_ID3D11_PTR(m_texture);
+    RT_RELEASE_OBJ_PTR_ARR(m_targaData);
     return;
 }
 
