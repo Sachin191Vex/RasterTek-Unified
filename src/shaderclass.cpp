@@ -97,19 +97,21 @@ ShaderInfo ShaderClass::GetShaderUsed()
 // --------------------------------------------------------------------------------------------------------------------
 bool ShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                          XMMATRIX projMatrix, ID3D11ShaderResourceView* texture,
-                         bool isLightPos, unsigned int numDiffuseLights, XMFLOAT3 lightPosDir[],
+                         XMFLOAT3 cameraPos,
                          bool useAmbient,  XMFLOAT4 ambientCol,
-                         bool useDiffused, XMFLOAT4 diffuseCol[],
-                         bool useSpecular, XMFLOAT3 cameraPos, XMFLOAT4 specularCol, float specularPow)
+                         bool useDiffuse, unsigned int numDiffuseLights, XMFLOAT4 diffuseCol[],
+                         bool isLightPos, XMFLOAT3 lightPosDir[],
+                         bool useSpecular, XMFLOAT4 specularCol, float specularPow)
 {
     bool result;
 
     // Set the shader parameters that it will use for rendering.
     result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projMatrix, texture,
-                                 isLightPos, numDiffuseLights, lightPosDir,
+                                 cameraPos,
                                  useAmbient, ambientCol,
-                                 useDiffused, diffuseCol,
-                                 useSpecular, cameraPos, specularCol, specularPow);
+                                 useDiffuse, numDiffuseLights, diffuseCol,
+                                 isLightPos, lightPosDir,
+                                 useSpecular, specularCol, specularPow);
     if (!result) { return false; }
 
     // Now render the prepared buffers with the shader.
@@ -386,10 +388,11 @@ void ShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, 
 // to send them from there into the vertex shader during the Render function call.
 bool ShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                                       XMMATRIX projMatrix, ID3D11ShaderResourceView* texture,
-                                      bool isLightPos, unsigned int numDiffuseLights, XMFLOAT3 lightPosDir[],
+                                      XMFLOAT3 cameraPos,
                                       bool useAmbient, XMFLOAT4 ambientCol,
-                                      bool useDiffuse, XMFLOAT4 diffuseCol[],
-                                      bool useSpecular, XMFLOAT3 cameraPos, XMFLOAT4 specularCol, float specularPow)
+                                      bool useDiffuse, unsigned int numDiffuseLights, XMFLOAT4 diffuseCol[],
+                                      bool isLightPos, XMFLOAT3 lightPosDir[],
+                                      bool useSpecular, XMFLOAT4 specularCol, float specularPow)
 {
     HRESULT result;
     bool useTexture = false;

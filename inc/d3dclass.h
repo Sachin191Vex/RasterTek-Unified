@@ -35,6 +35,10 @@ public:
     void D3DClass::SetBackBufferRenderTarget();
     void D3DClass::ResetViewport();
 
+    // Functions for turning the Z buffer on and off when rendering 2D images.
+    void TurnZBufferOn();
+    void TurnZBufferOff();
+
 private:
     bool m_vsync_enabled;
     int m_videoCardMemory;
@@ -49,6 +53,7 @@ private:
     ID3D11DepthStencilState* m_depthStencilState;
     ID3D11DepthStencilView* m_depthStencilView;
     ID3D11RasterizerState* m_rasterState;
+    ID3D11DepthStencilState* m_depthDisabledStencilState;
 
     D3D11_VIEWPORT m_viewport;
     XMMATRIX m_projectionMatrix;

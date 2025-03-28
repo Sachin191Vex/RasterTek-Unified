@@ -6,6 +6,7 @@
 #include "modelclass.h"
 #include "shaderclass.h"
 #include "lightclass.h"
+#include "bitmapclass.h"
 
 // GLOBALS
 const bool FULL_SCREEN = false;
@@ -32,6 +33,7 @@ private:
     CameraClass* m_Camera;
     ModelClass* m_Model;
     ShaderClass* m_Shader;
+    BitmapClass* m_Bitmap;
     LightClass* m_Lights;
     int m_numDiffuseLights;
     bool m_isDiffuseLightPosGiven;   // Position of diffuse lights is specified, if true; otherise direction will be given. 

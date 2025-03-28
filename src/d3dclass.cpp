@@ -3,6 +3,15 @@
 // --------------------------------------------------------------------------------------------------------------------
 D3DClass::D3DClass()
 {
+    m_swapChain = nullptr;
+    m_device = nullptr;
+    m_deviceContext = nullptr;
+    m_renderTargetView = nullptr;
+    m_depthStencilBuffer = nullptr;
+    m_depthStencilState = nullptr;
+    m_depthStencilView = nullptr;
+    m_rasterState = nullptr;
+    m_depthDisabledStencilState = nullptr;
 }
 
 D3DClass::D3DClass(const D3DClass& from)
@@ -14,6 +23,32 @@ D3DClass::~D3DClass()
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+#define D3DCLASS_CREATE_DEPTH_STENCIL_STATE(state_var, depth_mode) {\
+    /* Initialize the description of the stencil state. */\
+    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;\
+    ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));\
+    /* Set up the description of the stencil state. */\
+    depthStencilDesc.DepthEnable = depth_mode;\
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;\
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;\
+    depthStencilDesc.StencilEnable = true;\
+    depthStencilDesc.StencilReadMask = 0xFF;\
+    depthStencilDesc.StencilWriteMask = 0xFF;\
+    /* Stencil operations if pixel is front-facing.*/\
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;\
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;\
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;\
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;\
+    /* Stencil operations if pixel is back-facing.*/\
+    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;\
+    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;\
+    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;\
+    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;\
+    /* Create the texture for the depth buffer using the filled out description.*/\
+    result = m_device->CreateDepthStencilState(&depthStencilDesc, &state_var);\
+    if (FAILED(result)) { return false; }\
+}
+
 bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullscreen, float screenDepth, float screenNear)
 {
     HRESULT result;
@@ -61,12 +96,9 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
     // Now go through all the display modes and find the one that matches the screen width and height.
     // When a match is found store the numerator and denominator of the refresh rate for that monitor.
-    for (i = 0; i < numModes; i++)
-    {
-        if (displayModeList[i].Width == (unsigned int)screenWidth)
-        {
-            if (displayModeList[i].Height == (unsigned int)screenHeight)
-            {
+    for (i = 0; i < numModes; i++) {
+        if (displayModeList[i].Width == (unsigned int)screenWidth) {
+            if (displayModeList[i].Height == (unsigned int)screenHeight) {
                 numerator = displayModeList[i].RefreshRate.Numerator;
                 denominator = displayModeList[i].RefreshRate.Denominator;
             }
@@ -207,7 +239,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     backBufferPtr = nullptr;
 
     // Section 5 ------------------------------------------------------------------------------------------
-    // // We will also need to set up a depth buffer description. We'll use this to create a depth buffer so that our polygons can be rendered properly in 3D space.
+    // We will also need to set up a depth buffer description. We'll use this to create a depth buffer so that
+    // our polygons can be rendered properly in 3D space.
     // At the same time, we will attach a stencil buffer to our depth buffer.
     // The stencil buffer can be used to achieve effects such as motion blur, volumetric shadows, and other things.
 
@@ -215,6 +248,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     D3D11_TEXTURE2D_DESC depthBufferDesc;
     ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
 
+    // Initialize the description of the depth buffer.
     // Set up the description of the depth buffer.
     depthBufferDesc.Width = screenWidth;
     depthBufferDesc.Height = screenHeight;
@@ -228,6 +262,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     depthBufferDesc.CPUAccessFlags = 0;
     depthBufferDesc.MiscFlags = 0;
 
+    // Initialize the description of the depth buffer.
+    // Set up the description of the depth buffer.
     // Now we create the depth / stencil buffer using that description.
     // You will notice we use the CreateTexture2D function to make the buffers, hence the buffer is just a 2D texture.
     // The reason for this is that once your polygons are sorted and then rasterized, they just end up being colored pixels in this 2D buffer.
@@ -239,40 +275,15 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
     // Section 6 ------------------------------------------------------------------------------------------
     // Now we need to setup the depth stencil description. This allows us to control what type of depth test Direct3D will do for each pixel.
+    D3DCLASS_CREATE_DEPTH_STENCIL_STATE(m_depthStencilState, true);
 
-    // Initialize the description of the stencil state.
-    D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
-    ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
-
-    // Set up the description of the stencil state.
-    depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-
-    depthStencilDesc.StencilEnable = true;
-    depthStencilDesc.StencilReadMask = 0xFF;
-    depthStencilDesc.StencilWriteMask = 0xFF;
-
-    // Stencil operations if pixel is front-facing.
-    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // Stencil operations if pixel is back-facing.
-    depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-    depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-    depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-    // With the description filled out we can now create a depth stencil state.
-    // Create the depth stencil state.
-    result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState);
-    if (FAILED(result)) { return false; }
+    // Now create a second depth stencil state which turns off the Z buffer for 2D rendering.  The only difference is 
+    // that DepthEnable is set to false, all other parameters are the same as the other depth stencil state.
+    D3DCLASS_CREATE_DEPTH_STENCIL_STATE(m_depthDisabledStencilState, false);
 
     // With the created depth stencil state, we can now set it so that it takes effect. Notice we use the device context to set it.
     // Set the depth stencil state.
-    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1); // Same as TurnZBufferOn() function
 
     // Section 7 ------------------------------------------------------------------------------------------
     // The next thing we need to create is the description of the view of the depth stencil buffer.
@@ -371,6 +382,13 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
     return true;
 }
 
+#define D3DCLASS_CHECK_AND_RELEASE(obj) {\
+    if (obj) {\
+        obj->Release();\
+        obj = nullptr;\
+    }\
+}
+
 void D3DClass::Shutdown()
 {
     // The Shutdown function will release and clean up all the pointers used in the Initialize function, it's pretty straight forward.
@@ -378,50 +396,18 @@ void D3DClass::Shutdown()
     // If this is not done and you try to release the swap chain in full screen mode it will throw some exceptions.
     // So, to avoid that happening we just always force windowed mode before shutting down Direct3D.\
 
-        // Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
-    if (m_swapChain) {
-        m_swapChain->SetFullscreenState(false, NULL);
-    }
+    // Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
+    if (m_swapChain) { m_swapChain->SetFullscreenState(false, NULL); }
 
-    if (m_rasterState) {
-        m_rasterState->Release();
-        m_rasterState = nullptr;
-    }
-
-    if (m_depthStencilView)	{
-        m_depthStencilView->Release();
-        m_depthStencilView = nullptr;
-    }
-
-    if (m_depthStencilState) {
-        m_depthStencilState->Release();
-        m_depthStencilState = nullptr;
-    }
-
-    if (m_depthStencilBuffer) {
-        m_depthStencilBuffer->Release();
-        m_depthStencilBuffer = nullptr;
-    }
-
-    if (m_renderTargetView) {
-        m_renderTargetView->Release();
-        m_renderTargetView = nullptr;
-    }
-
-    if (m_deviceContext) {
-        m_deviceContext->Release();
-        m_deviceContext = nullptr;
-    }
-
-    if (m_device) {
-        m_device->Release();
-        m_device = nullptr;
-    }
-
-    if (m_swapChain) {
-        m_swapChain->Release();
-        m_swapChain = nullptr;
-    }
+    D3DCLASS_CHECK_AND_RELEASE(m_rasterState);
+    D3DCLASS_CHECK_AND_RELEASE(m_depthStencilView);
+    D3DCLASS_CHECK_AND_RELEASE(m_depthDisabledStencilState);
+    D3DCLASS_CHECK_AND_RELEASE(m_depthStencilState);
+    D3DCLASS_CHECK_AND_RELEASE(m_depthStencilBuffer);
+    D3DCLASS_CHECK_AND_RELEASE(m_renderTargetView);
+    D3DCLASS_CHECK_AND_RELEASE(m_deviceContext);
+    D3DCLASS_CHECK_AND_RELEASE(m_device);
+    D3DCLASS_CHECK_AND_RELEASE(m_swapChain);
 
     return;
 }
@@ -512,6 +498,23 @@ void D3DClass::ResetViewport()
     // Set the viewport.
     m_deviceContext->RSSetViewports(1, &m_viewport);
 
+    return;
+}
+
+// These are the new functions for enabling and disabling the Z buffer.
+// To turn Z buffering on we set the original depth stencil.
+// To turn Z buffering off we set the new depth stencil that has depthEnable set to false.
+// Generally, the best way to use these functions is first do all your 3D rendering,
+// then turn the Z buffer off and do your 2D rendering, and then turn the Z buffer on again.
+void D3DClass::TurnZBufferOn()
+{
+    m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+    return;
+}
+
+void D3DClass::TurnZBufferOff()
+{
+    m_deviceContext->OMSetDepthStencilState(m_depthDisabledStencilState, 1);
     return;
 }
 // --------------------------------------------------------------------------------------------------------------------

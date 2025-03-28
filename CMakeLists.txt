@@ -27,6 +27,8 @@ set(SOURCES
     src/shaderclass.cpp
     inc/modelclass.h
     src/modelclass.cpp
+    inc/bitmapclass.h
+    src/bitmapclass.cpp
     inc/cameraclass.h
     src/cameraclass.cpp
     inc/textureclass.h

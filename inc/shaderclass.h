@@ -84,10 +84,11 @@ public:
     void Shutdown();
     bool Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                 XMMATRIX projMatrix, ID3D11ShaderResourceView* texture,
-                bool isLightPos, unsigned int numDiffuseLights, XMFLOAT3 lightPosDir[],
+                XMFLOAT3 cameraPos,
                 bool useAmbient, XMFLOAT4 ambientCol,
-                bool useDiffuse, XMFLOAT4 diffuseCol[],
-                bool useSpecular, XMFLOAT3 cameraPos, XMFLOAT4 specularCol, float specularPow);
+                bool useDiffuse, unsigned int numDiffuseLights, XMFLOAT4 diffuseCol[],
+                bool isLightPos, XMFLOAT3 lightPosDir[],
+                bool useSpecular, XMFLOAT4 specularCol, float specularPow);
 
 private:
     bool InitializeShader(ID3D11Device* device, HWND hwnd, bool useTexture, bool useAmbient, bool useDiffuse, bool useSpecular);
@@ -100,10 +101,11 @@ private:
 
     bool SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
                              XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture,
-                             bool isLightPos, unsigned int numDiffuseLights, XMFLOAT3 lightPosDir[],
+                             XMFLOAT3 cameraPos,
                              bool useAmbient, XMFLOAT4 ambientCol,
-                             bool useDiffuse, XMFLOAT4 diffuseCol[],
-                             bool useSpecular, XMFLOAT3 cameraPos, XMFLOAT4 specularCol, float specularPow);
+                             bool useDiffuse, unsigned int numDiffuseLights, XMFLOAT4 diffuseCol[],
+                             bool isLightPos, XMFLOAT3 lightPosDir[],
+                             bool useSpecular, XMFLOAT4 specularCol, float specularPow);
     void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
 
 private:

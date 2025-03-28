@@ -103,7 +103,7 @@ void CameraClass::Render()
     lookAtVector = XMVectorAdd(positionVector, lookAtVector);
 
     // Finally create the view matrix from the three updated vectors.
-    m_viewMatrix = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+    m_viewMatrix = m_viewMatrixDefault = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
 
     return;
 }
@@ -114,4 +114,9 @@ void CameraClass::GetViewMatrix(XMMATRIX& viewMatrix)
     return;
 }
 
+void CameraClass::GetViewMatrixDefault(XMMATRIX& viewMatrix)
+{
+    viewMatrix = m_viewMatrixDefault;
+    return;
+}
 // --------------------------------------------------------------------------------------------------------------------
