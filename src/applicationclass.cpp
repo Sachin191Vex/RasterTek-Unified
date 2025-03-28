@@ -9,7 +9,7 @@ ApplicationClass::ApplicationClass()
     m_Shader = nullptr;
     m_Bitmap = nullptr;
     m_Lights = nullptr;
-    m_Lights = nullptr;
+    m_Timer = nullptr;
     m_numDiffuseLights = 0;
     m_isDiffuseLightPosGiven = false;
 }
@@ -28,7 +28,7 @@ ApplicationClass::~ApplicationClass()
     return false;\
 }
 
-bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
+bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd, ApplicationConfig& config)
 {
     bool result;
     char modelFilename[128];
@@ -41,6 +41,10 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     bool useLighting = false;
     bool useGeoRendering = false;
     bool use2DRendering = false;
+    bool useSpriteAnimation = false;
+
+    // Appliction configuaration paramaters
+    m_Config = config;
 
     // Initilize variable
     strcpy(modelFilename, "");
@@ -75,15 +79,20 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     if (CHECK_RT_TEST_NUM(11)) { strcpy(modelFilename, "../data/models/plane.txt"); }
 
     if (CHECK_RT_TEST_NUM(5) || CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11) ||
-        CHECK_RT_TEST_NUM(12)) {
-        strcpy(textureFilename, "../data/textures/stone01.tga");
+        CHECK_RT_TEST_NUM(12) || CHECK_RT_TEST_NUM(13)) {
         useTexture = true;
+        if (CHECK_RT_TEST_NUM(12)) { strcpy(bitmapFilename, "../data/textures/stone01.tga"); }
+        else if (CHECK_RT_TEST_NUM(13)) { strcpy(bitmapFilename, "../data/textures/sprite_data_01.txt"); }
+        else { strcpy(textureFilename, "../data/textures/stone01.tga"); }
     }
 
     if (CHECK_RT_TEST_NUM(6) || CHECK_RT_TEST_NUM(7) || CHECK_RT_TEST_NUM(8) || CHECK_RT_TEST_NUM(9) || CHECK_RT_TEST_NUM(10) || CHECK_RT_TEST_NUM(11)) { useAmbient = true; useDiffuse = true; }
     if (CHECK_RT_TEST_NUM(10)) { useAmbient = true;  useSpecular = true; }
 
-    if (CHECK_RT_TEST_NUM(12)) { useGeoRendering = false; use2DRendering = true; }
+    if (CHECK_RT_TEST_NUM(12)  || CHECK_RT_TEST_NUM(13)) {
+        useGeoRendering = false; use2DRendering = true;
+        if (CHECK_RT_TEST_NUM(13)) { m_Config.useTimer = true; useSpriteAnimation = true; }
+    }
 
     CraftModel craftModel = TRI_FULLCOL;
     if (CHECK_RT_TEST_NUM(1)) { craftModel = TRI_RED; }
@@ -153,9 +162,16 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
     if (use2DRendering) {
         m_Bitmap = new BitmapClass;
 
-        strcpy(bitmapFilename, textureFilename);  // "../data/textures/stone01.tga"
-        result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, bitmapFilename, 50, 50);
+        result = m_Bitmap->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), screenWidth, screenHeight, useSpriteAnimation, bitmapFilename, 50, 50);
         if (!result) { SHOW_MSG_AND_RETURN("Could not initialize the bitmap object.", "Error"); }
+    }
+
+    // Create and initialize the timer object.
+    if (m_Config.useTimer == true) {
+        m_Timer = new TimerClass;
+
+        result = m_Timer->Initialize();
+        if (!result) { return false; }
     }
 
     return true;
@@ -163,11 +179,12 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 void ApplicationClass::Shutdown()
 {
+    RT_RELEASE_OBJ_PTR(m_Timer);
     RT_RELEASE_OBJ_PTR_ARR(m_Lights);
     RT_SHUTDOWN_OBJ_PTR(m_Bitmap);
     RT_SHUTDOWN_OBJ_PTR(m_Shader);
     RT_SHUTDOWN_OBJ_PTR(m_Model);
-    RT_RELEASE_OBJ_PTR(m_Lights);
+    RT_RELEASE_OBJ_PTR(m_Camera);
     RT_SHUTDOWN_OBJ_PTR(m_Direct3D);
 
     return;
@@ -176,12 +193,24 @@ void ApplicationClass::Shutdown()
 // --------------------------------------------------------------------------------------------------------------------
 bool ApplicationClass::Frame()
 {
-    static float rotation = 0.0f;
     bool result;
+    static float rotation = 0.0f;
+    float frameTime;
 
     // Update the rotation variable each frame.
     rotation -= 0.0174532925f * 0.1f;
     if (rotation < 0.0f) { rotation += 360.0f; }
+
+    if (m_Config.useTimer) {
+        // Update the system stats.
+        m_Timer->Frame();
+
+        // Get the current frame time.
+        frameTime = m_Timer->GetTime();
+
+        // Update the sprite object using the frame time.
+        m_Bitmap->Update(frameTime);
+    }
 
     // Render the graphics scene.
     result = Render(rotation);
@@ -225,7 +254,7 @@ bool ApplicationClass::Render(float rotation)
     bool useGeoRendering = false;
     bool use2DRendering = false;
 
-    if (CHECK_RT_TEST_NUM(12)) { useGeoRendering = false; use2DRendering = true; }
+    if (CHECK_RT_TEST_NUM(12) || CHECK_RT_TEST_NUM(13)) { useGeoRendering = false; use2DRendering = true; }
 
     if (CHECK_RT_TEST_NUM(3) == true) {
         // Clear the buffers to begin the scene - gray

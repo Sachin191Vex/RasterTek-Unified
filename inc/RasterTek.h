@@ -40,3 +40,4 @@ extern RTUserArgs RTArgs;
 #define RT_SHUTDOWN_OBJ_PTR(obj) { if (obj) { obj->Shutdown(); delete obj; obj = nullptr;} }
 #define RT_RELEASE_ID3D11_PTR(ID3D11_ptr) { if (ID3D11_ptr) { ID3D11_ptr->Release(); ID3D11_ptr = nullptr;} }
 #define RT_RELEASE_OBJ_PTR_ARR(obj_arr) { if (obj_arr) { delete[] obj_arr; obj_arr = nullptr;} }
+#define RT_SHUTDOWN_OBJ_PTR_ARR(obj_arr, obj_cnt) { if (obj_arr) { for (int i = 0; i < obj_cnt; i++) { obj_arr[i].Shutdown(); } };  delete[] obj_arr; obj_arr = nullptr; }

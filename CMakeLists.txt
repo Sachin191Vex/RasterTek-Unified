@@ -35,6 +35,8 @@ set(SOURCES
     src/textureclass.cpp
     inc/lightclass.h
     src/lightclass.cpp
+    inc/timerclass.h
+    src/timerclass.cpp
     shaders/color.vs     # Vertex shader (Rendering Color)
     shaders/color.ps     # Pixel shader (RRendering Color)
     shaders/texture.vs   # Vertex shader (Rendering Texture)
